@@ -44,28 +44,9 @@ ZAPI PHP SDK'nın tüm endpoint'lerini ve kullanım örneklerini içeren kapsaml
 $result = $zapi->auth->register([
     'email' => 'user@example.com',
     'password' => 'password123',
-    'name' => 'John Doe'
+    'firstName' => 'John',
+    'lastName' => 'Doe'
 ]);
-```
-
-**Parametreler:**
-- `email` (string, gerekli): E-posta adresi
-- `password` (string, gerekli): Şifre (min 8 karakter)
-- `name` (string, gerekli): Kullanıcı adı
-
-**Yanıt:**
-```json
-{
-    "success": true,
-    "data": {
-        "message": "Kullanıcı başarıyla kaydedildi",
-        "user": {
-            "id": "user_id",
-            "email": "user@example.com",
-            "name": "John Doe"
-        }
-    }
-}
 ```
 
 ### Kullanıcı Girişi
@@ -77,19 +58,21 @@ $result = $zapi->auth->login('user@example.com', 'password123');
 ### E-posta Doğrulama
 
 ```php
+$result = $zapi->auth->sendVerification('user@example.com', 'email');
 $result = $zapi->auth->verifyEmail('user@example.com', '123456');
 ```
 
-### Şifre Sıfırlama
+### Şifre İşlemleri
 
 ```php
+// Şifre sıfırlama isteği
 $result = $zapi->auth->requestPasswordReset('user@example.com');
-```
 
-### Şifre Değiştirme
+// Şifre sıfırlama
+$result = $zapi->auth->resetPassword('reset_token', 'new_password');
 
-```php
-$result = $zapi->auth->changePassword('old_password', 'new_password123');
+// Şifre değiştirme
+$result = $zapi->auth->changePassword('old_password', 'new_password');
 ```
 
 ### OTP İşlemleri
@@ -102,19 +85,17 @@ $result = $zapi->auth->sendOTP('+905551234567', 'login');
 $result = $zapi->auth->verifyOTP('+905551234567', '123456', 'login');
 ```
 
-**Parametreler:**
-- `phone` (string, gerekli): Telefon numarası (+90 formatında)
-- `code` (string, gerekli): OTP kodu (6 haneli)
-- `purpose` (string, opsiyonel): OTP amacı (login, verification, etc.)
-
-### Profil İşlemleri
+### Token İşlemleri
 
 ```php
-// Profil bilgilerini al
-$profile = $zapi->auth->getProfile();
+// Token yenile
+$result = $zapi->auth->refreshToken('refresh_token');
 
 // Çıkış yap
 $result = $zapi->auth->logout();
+
+// Sağlık kontrolü
+$result = $zapi->auth->healthCheck();
 ```
 
 ## 🔥 Firebase Kimlik Doğrulama (AuthFirebase)
@@ -122,143 +103,143 @@ $result = $zapi->auth->logout();
 ### Google ile Giriş
 
 ```php
-$result = $zapi->authFirebase->googleLogin([
-    'id_token' => 'google_id_token',
-    'access_token' => 'google_access_token'
+$result = $zapi->authFirebase->loginWithGoogle('firebase_token', [
+    'returnSecureToken' => true
 ]);
 ```
 
 ### Apple ile Giriş
 
 ```php
-$result = $zapi->authFirebase->appleLogin([
-    'identity_token' => 'apple_identity_token',
-    'authorization_code' => 'apple_authorization_code'
+$result = $zapi->authFirebase->loginWithApple('firebase_token', [
+    'returnSecureToken' => true
 ]);
 ```
 
-### Firebase Token Doğrulama
+### Token İşlemleri
 
 ```php
-$result = $zapi->authFirebase->verifyToken([
-    'firebase_token' => 'firebase_id_token'
+// Token yenile
+$result = $zapi->authFirebase->refreshToken('refresh_token');
+
+// Profil güncelle
+$result = $zapi->authFirebase->updateProfile([
+    'displayName' => 'John Doe',
+    'photoURL' => 'https://example.com/photo.jpg'
 ]);
+
+// Çıkış yap
+$result = $zapi->authFirebase->logout();
 ```
 
-### Firebase Kullanıcı Oluşturma
+### Sistem Bilgileri
 
 ```php
-$result = $zapi->authFirebase->createUser([
-    'uid' => 'firebase_uid',
-    'email' => 'user@example.com',
-    'display_name' => 'John Doe'
-]);
-```
+// SDK durumu
+$result = $zapi->authFirebase->getSDKStatus();
 
-### Firebase Kullanıcı Güncelleme
+// Debug bilgileri
+$result = $zapi->authFirebase->getDebugInfo();
 
-```php
-$result = $zapi->authFirebase->updateUser([
-    'uid' => 'firebase_uid',
-    'display_name' => 'Updated Name',
-    'photo_url' => 'https://example.com/photo.jpg'
-]);
-```
-
-### Firebase Kullanıcı Silme
-
-```php
-$result = $zapi->authFirebase->deleteUser([
-    'uid' => 'firebase_uid'
-]);
-```
-
-### Firebase Custom Token Oluşturma
-
-```php
-$result = $zapi->authFirebase->createCustomToken([
-    'uid' => 'firebase_uid',
-    'claims' => ['role' => 'admin']
-]);
-```
-
-### Firebase Token Yenileme
-
-```php
-$result = $zapi->authFirebase->refreshToken([
-    'refresh_token' => 'firebase_refresh_token'
-]);
+// Sağlık kontrolü
+$result = $zapi->authFirebase->healthCheck();
 ```
 
 ## 🔑 OAuth Kimlik Doğrulama (AuthOAuth)
 
-### OAuth Sağlayıcıları Listele
+### Google OAuth
 
 ```php
-$providers = $zapi->authOAuth->getProviders();
-```
+// Google giriş başlat
+$result = $zapi->authOAuth->initiateGoogleLogin('app_id', [
+    'redirect_uri' => 'https://yourapp.com/callback'
+]);
 
-### OAuth URL Oluştur
-
-```php
-$result = $zapi->authOAuth->getAuthUrl([
-    'provider' => 'google',
+// Google callback işle
+$result = $zapi->authOAuth->handleGoogleCallback('code', 'state', [
     'redirect_uri' => 'https://yourapp.com/callback'
 ]);
 ```
 
-### OAuth Callback İşle
+### Apple OAuth
 
 ```php
-$result = $zapi->authOAuth->handleCallback([
-    'provider' => 'google',
-    'code' => 'authorization_code',
-    'state' => 'state_parameter'
+// Apple giriş başlat
+$result = $zapi->authOAuth->initiateAppleLogin('app_id', [
+    'redirect_uri' => 'https://yourapp.com/callback'
+]);
+
+// Apple callback işle
+$result = $zapi->authOAuth->handleAppleCallback('code', 'state', [
+    'redirect_uri' => 'https://yourapp.com/callback'
 ]);
 ```
 
-### OAuth Token Yenile
+### Hesap Bağlama
 
 ```php
-$result = $zapi->authOAuth->refreshToken([
-    'provider' => 'google',
-    'refresh_token' => 'refresh_token'
+// Hesap bağla
+$result = $zapi->authOAuth->linkAccount('google', 'access_token', [
+    'merge_data' => true
+]);
+
+// Hesap bağlantısını kaldır
+$result = $zapi->authOAuth->unlinkAccount('google');
+```
+
+### Sayfa Yönetimi
+
+```php
+// Başarı sayfası
+$result = $zapi->authOAuth->getSuccessPage([
+    'message' => 'Giriş başarılı!'
+]);
+
+// Hata sayfası
+$result = $zapi->authOAuth->getErrorPage([
+    'error' => 'Giriş başarısız!'
 ]);
 ```
 
-### OAuth Kullanıcı Bilgileri
+### Test ve Debug
 
 ```php
-$result = $zapi->authOAuth->getUserInfo([
-    'provider' => 'google',
-    'access_token' => 'access_token'
-]);
+// Sandbox test
+$result = $zapi->authOAuth->sandboxTest('google');
+
+// Debug bilgileri
+$result = $zapi->authOAuth->getDebugInfo('google');
 ```
 
-### OAuth Bağlantıyı Kaldır
+### Metadata Yönetimi
 
 ```php
-$result = $zapi->authOAuth->disconnect([
-    'provider' => 'google'
-]);
+// Metadata al
+$result = $zapi->authOAuth->getMetadata('app_id', 'path');
+
+// Metadata güncelle
+$result = $zapi->authOAuth->updateMetadata('app_id', 'path', ['value']);
+
+// Metadata patch
+$result = $zapi->authOAuth->patchMetadata('app_id', 'path', ['value']);
+
+// Metadata sil
+$result = $zapi->authOAuth->deleteMetadata('app_id', 'path');
 ```
 
 ## 👥 Kullanıcı Yönetimi (User)
 
-### Profil Bilgilerini Al
+### Profil İşlemleri
 
 ```php
-$zapi->setBearerToken('your_bearer_token');
+// Profil bilgilerini al
 $profile = $zapi->user->getProfile();
-```
 
-### Profil Güncelle
-
-```php
+// Profil güncelle
 $result = $zapi->user->updateProfile([
-    'name' => 'John Updated',
-    'bio' => 'Yeni biyografi',
-    'website' => 'https://example.com'
+    'firstName' => 'John',
+    'lastName' => 'Doe',
+    'bio' => 'Yeni biyografi'
 ]);
 ```
 
@@ -278,7 +259,7 @@ $result = $zapi->user->deleteAvatar();
 $usage = $zapi->user->getUsage();
 ```
 
-### Kullanıcı Yanıtları
+### Yanıt Yönetimi
 
 ```php
 // Kullanıcının yanıtlarını listele
@@ -297,10 +278,14 @@ $export = $zapi->user->exportResponse('response_id', 'json');
 $lastResponse = $zapi->user->getLastResponse();
 ```
 
-### Kullanıcı Deaktivasyonu
+### Hesap Yönetimi
 
 ```php
+// Hesabı deaktive et
 $result = $zapi->user->deactivateAccount('Hesap kapatma nedeni');
+
+// Hesabı sil
+$result = $zapi->user->deleteAccount('password');
 ```
 
 ### Metadata İşlemleri
@@ -321,74 +306,25 @@ $result = $zapi->user->deleteMetadata('key');
 
 ## 🤖 AI Sohbet (Responses)
 
-### Basit Sohbet
+### Sohbet Oluşturma
 
 ```php
 $response = $zapi->responses->create([
     'model' => 'gpt-4',
     'messages' => [
         ['role' => 'user', 'content' => 'Merhaba!']
-    ]
+    ],
+    'temperature' => 0.7,
+    'max_tokens' => 1000
 ]);
 ```
 
-**Parametreler:**
-- `model` (string, gerekli): AI model adı
-- `messages` (array, gerekli): Mesaj dizisi
-- `temperature` (float, opsiyonel): Yaratıcılık seviyesi (0-1)
-- `max_tokens` (int, opsiyonel): Maksimum token sayısı
-
-### Yanıtları Listele
+### Yanıt Yönetimi
 
 ```php
+// Yanıtları listele
 $responses = $zapi->responses->list();
-```
 
-### Yanıt İstatistikleri
-
-```php
-$stats = $zapi->responses->getStats();
-```
-
-### Yanıt Arama
-
-```php
-$results = $zapi->responses->search([
-    'query' => 'arama terimi',
-    'limit' => 20
-]);
-```
-
-### Yanıt Kategorileri
-
-```php
-$categories = $zapi->responses->getCategories();
-```
-
-### Yanıt Etiketleri
-
-```php
-$tags = $zapi->responses->getTags();
-```
-
-### Favori İşlemleri
-
-```php
-$result = $zapi->responses->toggleFavorite('response_id');
-```
-
-### Yanıt Paylaşımı
-
-```php
-$result = $zapi->responses->share('response_id', [
-    'public' => true,
-    'expires_at' => '2025-12-31'
-]);
-```
-
-### Yanıt İşlemleri
-
-```php
 // Yanıtı al
 $response = $zapi->responses->get('response_id');
 
@@ -401,193 +337,184 @@ $result = $zapi->responses->update('response_id', [
 $result = $zapi->responses->delete('response_id');
 
 // Yanıtı dışa aktar
-$export = $zapi->responses->export('response_id');
+$export = $zapi->responses->export('response_id', 'json');
+```
+
+### İstatistikler ve Arama
+
+```php
+// İstatistikleri al
+$stats = $zapi->responses->getStats();
+
+// Yanıt ara
+$results = $zapi->responses->search([
+    'query' => 'arama terimi',
+    'limit' => 20
+]);
+
+// Kategorileri al
+$categories = $zapi->responses->getCategories();
+
+// Etiketleri al
+$tags = $zapi->responses->getTags();
+```
+
+### Favori ve Paylaşım
+
+```php
+// Favori durumunu değiştir
+$result = $zapi->responses->toggleFavorite('response_id');
+
+// Yanıtı paylaş
+$result = $zapi->responses->share('response_id', [
+    'public' => true,
+    'expires_at' => '2025-12-31'
+]);
 ```
 
 ## 🧠 AI Sağlayıcıları (AIProvider)
 
-### Sağlayıcıları Listele
+### Sağlayıcı Yönetimi
 
 ```php
+// Sağlayıcıları listele
 $providers = $zapi->aiProvider->list();
-```
 
-### Sağlayıcı Oluştur
-
-```php
+// Sağlayıcı oluştur
 $result = $zapi->aiProvider->create([
     'name' => 'OpenAI',
     'type' => 'openai',
-    'api_key' => 'your_api_key',
-    'base_url' => 'https://api.openai.com'
+    'api_key' => 'your_api_key'
 ]);
-```
 
-### Sağlayıcı Güncelle
+// Sağlayıcıyı al
+$provider = $zapi->aiProvider->get('provider_id');
 
-```php
+// Sağlayıcıyı güncelle
 $result = $zapi->aiProvider->update('provider_id', [
-    'name' => 'Updated OpenAI',
-    'is_active' => true
+    'name' => 'Updated OpenAI'
 ]);
-```
 
-### Sağlayıcı Sil
-
-```php
+// Sağlayıcıyı sil
 $result = $zapi->aiProvider->delete('provider_id');
-```
 
-### Sağlayıcı Test Et
-
-```php
+// Sağlayıcıyı test et
 $result = $zapi->aiProvider->test('provider_id');
 ```
 
-### Modelleri Listele
+### Model Yönetimi
 
 ```php
-$models = $zapi->aiProvider->getModels('provider_id');
-```
+// Modelleri listele
+$models = $zapi->aiProvider->getModels();
 
-### Model Oluştur
+// Modeli al
+$model = $zapi->aiProvider->getModel('model_id');
 
-```php
-$result = $zapi->aiProvider->createModel([
-    'provider_id' => 'provider_id',
-    'name' => 'gpt-4',
-    'display_name' => 'GPT-4',
-    'category' => 'chat',
-    'max_tokens' => 4096
-]);
-```
-
-### Model Güncelle
-
-```php
+// Modeli güncelle
 $result = $zapi->aiProvider->updateModel('model_id', [
-    'display_name' => 'Updated GPT-4',
-    'is_active' => true
+    'display_name' => 'Updated Model'
 ]);
-```
 
-### Model Sil
-
-```php
+// Modeli sil
 $result = $zapi->aiProvider->deleteModel('model_id');
+
+// Varsayılan modelleri al
+$defaultModels = $zapi->aiProvider->getDefaultModels();
 ```
 
 ## 📝 İçerik Yönetimi (Content)
 
-### İçerik Listele
+### İçerik İşlemleri
 
 ```php
-$content = $zapi->content->list([
-    'type' => 'article',
-    'limit' => 50,
-    'offset' => 0
-]);
-```
+// İçerikleri listele
+$content = $zapi->content->list();
 
-### İçerik Oluştur
-
-```php
+// İçerik oluştur
 $result = $zapi->content->create([
     'title' => 'Makale Başlığı',
     'content' => 'Makale içeriği...',
-    'type' => 'article',
-    'category' => 'technology'
+    'type' => 'article'
 ]);
-```
 
-### İçerik Güncelle
+// İçeriği al
+$content = $zapi->content->get('content_id');
 
-```php
+// İçeriği güncelle
 $result = $zapi->content->update('content_id', [
-    'title' => 'Güncellenmiş Başlık',
-    'content' => 'Güncellenmiş içerik...'
+    'title' => 'Güncellenmiş Başlık'
 ]);
-```
 
-### İçerik Sil
-
-```php
+// İçeriği sil
 $result = $zapi->content->delete('content_id');
 ```
 
-### İçerik Al
+### Kategoriler ve Tipler
 
 ```php
-$content = $zapi->content->get('content_id');
-```
-
-### İçerik Arama
-
-```php
-$results = $zapi->content->search([
-    'query' => 'arama terimi',
-    'type' => 'article',
-    'limit' => 20
-]);
-```
-
-### İçerik Kategorileri
-
-```php
-// Kategorileri listele
+// Kategorileri al
 $categories = $zapi->content->getCategories();
 
-// Kategori oluştur
-$result = $zapi->content->createCategory([
-    'name' => 'Yeni Kategori',
-    'description' => 'Kategori açıklaması'
-]);
+// Tipleri al
+$types = $zapi->content->getTypes();
 
-// Kategori güncelle
-$result = $zapi->content->updateCategory('category_id', [
-    'name' => 'Güncellenmiş Kategori'
-]);
-
-// Kategori sil
-$result = $zapi->content->deleteCategory('category_id');
+// Dilleri al
+$languages = $zapi->content->getLanguages();
 ```
 
-### İçerik Etiketleri
+### Arama ve İstatistikler
 
 ```php
-// Etiketleri listele
-$tags = $zapi->content->getTags();
-
-// Etiket oluştur
-$result = $zapi->content->createTag([
-    'name' => 'yeni-etiket',
-    'display_name' => 'Yeni Etiket'
+// Gelişmiş arama
+$results = $zapi->content->searchAdvanced([
+    'query' => 'arama terimi',
+    'type' => 'article',
+    'category' => 'technology'
 ]);
 
-// Etiket güncelle
-$result = $zapi->content->updateTag('tag_id', [
-    'display_name' => 'Güncellenmiş Etiket'
-]);
-
-// Etiket sil
-$result = $zapi->content->deleteTag('tag_id');
+// İstatistikleri al
+$stats = $zapi->content->getStats();
 ```
 
-### İçerik İstatistikleri
+### Metadata İşlemleri
 
 ```php
-$stats = $zapi->content->getStats([
-    'period' => 'monthly'
-]);
+// Metadata al
+$metadata = $zapi->content->getMetadata('content_id', 'path');
+
+// Metadata güncelle
+$result = $zapi->content->updateMetadata('content_id', 'path', ['value']);
+
+// Metadata patch
+$result = $zapi->content->patchMetadata('content_id', 'path', ['value']);
+
+// Metadata sil
+$result = $zapi->content->deleteMetadata('content_id', 'path');
+```
+
+### Public İçerik
+
+```php
+// Public içeriği al
+$publicContent = $zapi->content->getPublic('slug');
 ```
 
 ## 🎵 Ses İşleme (Audio)
 
-### Ses Transkripsiyonu
+### Metin-Ses Dönüşümü
 
 ```php
-$result = $zapi->audio->transcribe([
-    'file' => '/path/to/audio.mp3',
+$result = $zapi->audio->textToSpeech('Merhaba dünya!', 'alloy', [
+    'response_format' => 'mp3',
+    'speed' => 1.0
+]);
+```
+
+### Ses-Metin Dönüşümü
+
+```php
+$result = $zapi->audio->speechToText('/path/to/audio.mp3', [
     'model' => 'whisper-1',
     'language' => 'tr'
 ]);
@@ -596,17 +523,9 @@ $result = $zapi->audio->transcribe([
 ### Ses Çevirisi
 
 ```php
-$result = $zapi->audio->translate([
-    'file' => '/path/to/audio.mp3',
-    'model' => 'whisper-1',
-    'target_language' => 'en'
+$result = $zapi->audio->translateAudio('/path/to/audio.mp3', 'en', [
+    'model' => 'whisper-1'
 ]);
-```
-
-### Ses Formatları
-
-```php
-$formats = $zapi->audio->getSupportedFormats();
 ```
 
 ## 🖼️ Görsel İşleme (Images)
@@ -614,8 +533,7 @@ $formats = $zapi->audio->getSupportedFormats();
 ### Görsel Oluşturma
 
 ```php
-$result = $zapi->images->generate([
-    'prompt' => 'A beautiful sunset over mountains',
+$result = $zapi->images->generate('A beautiful sunset over mountains', [
     'model' => 'dall-e-3',
     'size' => '1024x1024',
     'quality' => 'standard'
@@ -625,300 +543,204 @@ $result = $zapi->images->generate([
 ### Görsel Düzenleme
 
 ```php
-$result = $zapi->images->edit([
-    'image' => '/path/to/image.png',
-    'mask' => '/path/to/mask.png',
-    'prompt' => 'Add a rainbow to the sky'
+$result = $zapi->images->edit('/path/to/image.png', 'Add a rainbow to the sky', [
+    'mask' => '/path/to/mask.png'
 ]);
 ```
 
 ### Görsel Varyasyonları
 
 ```php
-$result = $zapi->images->createVariation([
-    'image' => '/path/to/image.png',
-    'n' => 4
+$result = $zapi->images->createVariations('/path/to/image.png', [
+    'n' => 4,
+    'size' => '1024x1024'
 ]);
-```
-
-### Desteklenen Formatlar
-
-```php
-$formats = $zapi->images->getSupportedFormats();
 ```
 
 ## 🔍 Embeddings (Embeddings)
 
-### Embedding Oluştur
+### Embedding Oluşturma
 
 ```php
-$result = $zapi->embeddings->create([
-    'input' => 'Bu metin için embedding oluştur',
-    'model' => 'text-embedding-ada-002'
+$result = $zapi->embeddings->create('Bu metin için embedding oluştur', 'text-embedding-ada-002', [
+    'encoding_format' => 'float'
 ]);
-```
-
-### Çoklu Embedding
-
-```php
-$result = $zapi->embeddings->create([
-    'input' => [
-        'İlk metin',
-        'İkinci metin',
-        'Üçüncü metin'
-    ],
-    'model' => 'text-embedding-ada-002'
-]);
-```
-
-### Embedding Modelleri
-
-```php
-$models = $zapi->embeddings->getModels();
 ```
 
 ## ⚡ Gerçek Zamanlı (Realtime)
 
-### WebSocket Bağlantısı
+### Session Yönetimi
 
 ```php
-$realtime = $zapi->realtime->connect([
-    'room' => 'chat_room_1',
-    'user_id' => 'user_123'
-]);
-```
+// Session'ları listele
+$sessions = $zapi->realtime->getSessions();
 
-### Mesaj Gönderme
+// Session'ı devam ettir
+$result = $zapi->realtime->resumeSession('session_id');
 
-```php
-$result = $realtime->sendMessage([
-    'content' => 'Merhaba dünya!',
-    'type' => 'text'
-]);
-```
+// Session geçmişini al
+$history = $zapi->realtime->getSessionHistory('session_id');
 
-### Mesaj Dinleme
-
-```php
-$realtime->onMessage(function($message) {
-    echo "Yeni mesaj: " . $message['content'];
-});
-```
-
-### Oda Yönetimi
-
-```php
-// Oda oluştur
-$result = $zapi->realtime->createRoom([
-    'name' => 'Yeni Oda',
-    'type' => 'public'
+// Session oluştur
+$result = $zapi->realtime->createSession([
+    'name' => 'Chat Session',
+    'model' => 'gpt-4'
 ]);
 
-// Odaya katıl
-$result = $zapi->realtime->joinRoom('room_id');
+// Session'ı al
+$session = $zapi->realtime->getSession('session_id');
 
-// Odadan ayrıl
-$result = $zapi->realtime->leaveRoom('room_id');
-
-// Oda sil
-$result = $zapi->realtime->deleteRoom('room_id');
+// Session'ı sil
+$result = $zapi->realtime->deleteSession('session_id');
 ```
 
-### Kullanıcı Yönetimi
+### Sistem Bilgileri
 
 ```php
-// Kullanıcıları listele
-$users = $zapi->realtime->getUsers('room_id');
+// Modelleri al
+$models = $zapi->realtime->getModels();
 
-// Kullanıcı durumu
-$status = $zapi->realtime->getUserStatus('user_id');
-```
+// Stream bilgilerini al
+$streamInfo = $zapi->realtime->getStreamInfo();
 
-### Mesaj Geçmişi
-
-```php
-$history = $zapi->realtime->getHistory([
-    'room_id' => 'room_id',
-    'limit' => 50
-]);
+// İstatistikleri al
+$stats = $zapi->realtime->getStats();
 ```
 
 ## 📁 Dosya Yönetimi (Upload)
 
-### Dosya Yükleme
+### Dosya İşlemleri
 
 ```php
-$result = $zapi->upload->uploadFile([
-    'file' => '/path/to/file.pdf',
-    'type' => 'document'
+// Dosya yükle
+$result = $zapi->upload->upload('/path/to/file.pdf', [
+    'type' => 'document',
+    'public' => false
 ]);
+
+// Dosyaları listele
+$files = $zapi->upload->list();
+
+// Dosyayı al
+$file = $zapi->upload->get('file_id');
+
+// Dosyayı sil
+$result = $zapi->upload->delete('file_id');
 ```
 
-**Desteklenen Tipler:**
-- `document`: PDF, DOC, DOCX
-- `image`: JPG, PNG, GIF
-- `audio`: MP3, WAV
-- `video`: MP4, AVI
-
-### Dosya Bilgilerini Al
+### İstatistikler ve Temizlik
 
 ```php
-$fileInfo = $zapi->upload->getFileInfo('file_id');
-```
-
-### Dosya Silme
-
-```php
-$result = $zapi->upload->deleteFile('file_id');
-```
-
-### Yükleme İstatistikleri
-
-```php
+// İstatistikleri al
 $stats = $zapi->upload->getStats();
-```
 
-### Yükleme Temizliği
-
-```php
+// Temizlik yap
 $result = $zapi->upload->cleanup();
 ```
 
-### Yükleme İlerlemesi
+### İlerleme Takibi
 
 ```php
-// Tüm yüklemelerin ilerlemesi
-$progress = $zapi->upload->getAllProgress();
+// Yükleme ilerlemesini al
+$progress = $zapi->upload->getProgress('upload_id');
 
-// Belirli dosyanın ilerlemesi
-$progress = $zapi->upload->getProgress('file_id');
+// Tüm ilerlemeleri al
+$allProgress = $zapi->upload->getAllProgress();
 ```
 
-### URL ile Yükleme
+### Signed URL
 
 ```php
-$result = $zapi->upload->uploadFromUrl([
-    'url' => 'https://example.com/file.pdf',
-    'type' => 'document'
+// Signed URL oluştur
+$result = $zapi->upload->createSignedUrl('file_id', [
+    'expires_in' => 3600
 ]);
 ```
 
 ## 🔑 API Anahtarları (APIKeys)
 
-### API Anahtarlarını Listele
+### Anahtar Yönetimi
 
 ```php
+// Anahtarları listele
 $keys = $zapi->apiKeys->list();
-```
 
-### Yeni API Anahtarı Oluştur
-
-```php
+// Anahtar oluştur
 $result = $zapi->apiKeys->create([
     'name' => 'My API Key',
     'permissions' => ['read', 'write']
 ]);
-```
 
-### API Anahtarı Güncelle
+// Anahtarı al
+$key = $zapi->apiKeys->get('key_id');
 
-```php
+// Anahtarı güncelle
 $result = $zapi->apiKeys->update('key_id', [
-    'name' => 'Updated Name',
-    'isActive' => true
+    'name' => 'Updated Name'
 ]);
-```
 
-### API Anahtarı Sil
-
-```php
+// Anahtarı sil
 $result = $zapi->apiKeys->delete('key_id');
 ```
 
-### API Anahtarı Kullanımı
+### Kullanım ve Roller
 
 ```php
+// Anahtar kullanımını al
 $usage = $zapi->apiKeys->getUsage('key_id');
-```
 
-### Mevcut Roller
-
-```php
+// Mevcut rolleri al
 $roles = $zapi->apiKeys->getAvailableRoles();
-```
 
-### API Anahtarı Döndür
-
-```php
+// Anahtarı döndür
 $result = $zapi->apiKeys->rotate('key_id');
-```
 
-### API Anahtarı Durumu
+// Anahtar lookup
+$result = $zapi->apiKeys->lookup('api_key_string');
 
-```php
+// Anahtar durumunu değiştir
 $result = $zapi->apiKeys->toggleStatus('key_id');
-```
-
-### API Anahtarı Bilgisi
-
-```php
-$info = $zapi->apiKeys->getByKey('api_key_string');
 ```
 
 ## 📱 Uygulama Yönetimi (Apps)
 
-### Uygulamaları Listele
+### Uygulama İşlemleri
 
 ```php
+// Uygulamaları listele
 $apps = $zapi->apps->list();
-```
 
-### Uygulama Oluştur
-
-```php
+// Uygulama oluştur
 $result = $zapi->apps->create([
     'name' => 'My App',
-    'description' => 'App açıklaması',
-    'domain' => 'myapp.com'
+    'description' => 'App açıklaması'
 ]);
-```
 
-### Uygulama Güncelle
+// Uygulamayı al
+$app = $zapi->apps->get('app_id');
 
-```php
+// Uygulamayı güncelle
 $result = $zapi->apps->update('app_id', [
-    'name' => 'Updated App Name',
-    'description' => 'Güncellenmiş açıklama'
+    'name' => 'Updated App Name'
 ]);
-```
 
-### Uygulama Sil
-
-```php
+// Uygulamayı sil
 $result = $zapi->apps->delete('app_id');
 ```
 
-### Uygulama Bilgisi
+### İstatistikler ve Yönetim
 
 ```php
-$app = $zapi->apps->get('app_id');
-```
+// Genel istatistikleri al
+$stats = $zapi->apps->getStats();
 
-### Uygulama İstatistikleri
+// Uygulama istatistiklerini al
+$appStats = $zapi->apps->getAppStats('app_id');
 
-```php
-$stats = $zapi->apps->getStats('app_id');
-```
-
-### Kullanım Sıfırlama
-
-```php
+// Kullanımı sıfırla
 $result = $zapi->apps->resetUsage('app_id');
-```
 
-### Durum Değiştirme
-
-```php
+// Durumu değiştir
 $result = $zapi->apps->toggleStatus('app_id');
 ```
 
@@ -926,60 +748,31 @@ $result = $zapi->apps->toggleStatus('app_id');
 
 ```php
 // Metadata al
-$metadata = $zapi->apps->getMetadata('app_id', 'key');
+$metadata = $zapi->apps->getMetadata('app_id', 'path');
 
 // Metadata güncelle
-$result = $zapi->apps->updateMetadata('app_id', 'key', 'value');
+$result = $zapi->apps->updateMetadata('app_id', 'path', ['value']);
+
+// Metadata patch
+$result = $zapi->apps->patchMetadata('app_id', 'path', ['value']);
 
 // Metadata sil
-$result = $zapi->apps->deleteMetadata('app_id', 'key');
-
-// Tüm metadata
-$allMetadata = $zapi->apps->getAllMetadata('app_id');
+$result = $zapi->apps->deleteMetadata('app_id', 'path');
 ```
 
 ## 👑 Admin İşlemleri (Admin)
 
-### Sistem Durumu
+### Dashboard ve Sistem
 
 ```php
-$status = $zapi->admin->getSystemStatus();
-```
+// Dashboard'u al
+$dashboard = $zapi->admin->getDashboard();
 
-### Kullanıcı Yönetimi
+// Queue'yu al
+$queue = $zapi->admin->getQueue();
 
-```php
-// Kullanıcıları listele
-$users = $zapi->admin->getUsers();
-
-// Kullanıcı detayı
-$user = $zapi->admin->getUser('user_id');
-
-// Kullanıcı güncelle
-$result = $zapi->admin->updateUser('user_id', [
-    'role' => 'admin',
-    'isActive' => true
-]);
-
-// Kullanıcı sil
-$result = $zapi->admin->deleteUser('user_id');
-```
-
-### Sistem Ayarları
-
-```php
-// Ayarları al
-$settings = $zapi->admin->getSettings();
-
-// Ayar güncelle
-$result = $zapi->admin->updateSetting('key', 'value');
-```
-
-### Cron İşlemleri
-
-```php
-// Cron görevlerini listele
-$crons = $zapi->admin->getCronJobs();
+// Cron'ları al
+$crons = $zapi->admin->getCrons();
 
 // Cron tetikle
 $result = $zapi->admin->triggerCron('job_name');
@@ -988,330 +781,261 @@ $result = $zapi->admin->triggerCron('job_name');
 $result = $zapi->admin->triggerMonthlyReset();
 ```
 
-### Sistem Temizliği
+### Sistem Durumu
 
 ```php
+// Sağlık durumunu al
+$health = $zapi->admin->getHealth();
+
+// Metrikleri al
+$metrics = $zapi->admin->getMetrics();
+
 // Cache temizle
-$result = $zapi->admin->clearCache();
+$result = $zapi->admin->clearCache('all');
+```
 
-// Log temizle
-$result = $zapi->admin->clearLogs();
+### Yedekleme
 
-// Geçici dosyaları temizle
-$result = $zapi->admin->clearTempFiles();
+```php
+// Yedek oluştur
+$result = $zapi->admin->createBackup([
+    'type' => 'full'
+]);
+
+// Yedek geri yükle
+$result = $zapi->admin->restoreBackup('backup_id');
 ```
 
 ## 📊 Plan Yönetimi (Plans)
 
-### Planları Listele
+### Plan İşlemleri
 
 ```php
+// Planları listele
 $plans = $zapi->plans->list();
-```
 
-### Plan Oluştur
+// Plan karşılaştır
+$compare = $zapi->plans->compare(['plan1', 'plan2']);
 
-```php
+// Plan oluştur
 $result = $zapi->plans->create([
     'name' => 'Pro Plan',
-    'description' => 'Profesyonel plan',
     'price' => 29.99,
-    'currency' => 'USD',
-    'interval' => 'monthly',
-    'features' => ['unlimited_requests', 'priority_support']
+    'currency' => 'USD'
 ]);
-```
 
-### Plan Güncelle
-
-```php
-$result = $zapi->plans->update('plan_id', [
-    'name' => 'Updated Pro Plan',
-    'price' => 39.99
-]);
-```
-
-### Plan Sil
-
-```php
-$result = $zapi->plans->delete('plan_id');
-```
-
-### Plan Detayı
-
-```php
+// Planı al
 $plan = $zapi->plans->get('plan_id');
-```
 
-### Plan Özellikleri
-
-```php
-// Özellikleri listele
-$features = $zapi->plans->getFeatures('plan_id');
-
-// Özellik ekle
-$result = $zapi->plans->addFeature('plan_id', [
-    'name' => 'new_feature',
-    'value' => 'unlimited'
+// Planı güncelle
+$result = $zapi->plans->update('plan_id', [
+    'name' => 'Updated Plan'
 ]);
 
-// Özellik güncelle
-$result = $zapi->plans->updateFeature('plan_id', 'feature_id', [
-    'value' => '1000'
-]);
+// Planı sil
+$result = $zapi->plans->delete('plan_id');
 
-// Özellik sil
-$result = $zapi->plans->removeFeature('plan_id', 'feature_id');
-```
-
-### Plan İstatistikleri
-
-```php
-$stats = $zapi->plans->getStats('plan_id');
-```
-
-### Plan Aktivasyonu
-
-```php
+// Plan durumunu değiştir
 $result = $zapi->plans->toggleStatus('plan_id');
+```
+
+### Aboneler ve Analitik
+
+```php
+// Aboneleri al
+$subscribers = $zapi->plans->getSubscribers('plan_id');
+
+// Analitikleri al
+$analytics = $zapi->plans->getAnalytics('plan_id');
+```
+
+### Metadata İşlemleri
+
+```php
+// Metadata al
+$metadata = $zapi->plans->getMetadata('plan_id', 'path');
+
+// Metadata güncelle
+$result = $zapi->plans->updateMetadata('plan_id', 'path', ['value']);
+
+// Metadata patch
+$result = $zapi->plans->patchMetadata('plan_id', 'path', ['value']);
+
+// Metadata sil
+$result = $zapi->plans->deleteMetadata('plan_id', 'path');
 ```
 
 ## 💳 Abonelik (Subscription)
 
-### Abonelik Detayları
+### Abonelik İşlemleri
 
 ```php
-$subscription = $zapi->subscription->getDetails();
-```
-
-### Abonelik Yükseltme Kontrolü
-
-```php
-$upgrade = $zapi->subscription->checkUpgrade();
-```
-
-### Abonelik Güncelle
-
-```php
-$result = $zapi->subscription->update([
-    'plan_id' => 'new_plan_id'
+// Abonelik oluştur
+$result = $zapi->subscription->create([
+    'plan_id' => 'plan_id'
 ]);
-```
 
-### Abonelik İptal
+// Aboneliği iptal et
+$result = $zapi->subscription->cancel('İptal nedeni');
 
-```php
-$result = $zapi->subscription->cancel();
-```
-
-### Abonelik Yenile
-
-```php
+// Aboneliği yenile
 $result = $zapi->subscription->renew();
+
+// Analitikleri al
+$analytics = $zapi->subscription->getAnalytics();
+
+// Detayları al
+$details = $zapi->subscription->getDetails();
+
+// Yükseltme kontrolü
+$upgrade = $zapi->subscription->checkUpgrade();
 ```
 
 ## 👥 Rol Yönetimi (Roles)
 
-### Rolleri Listele
+### Rol İşlemleri
 
 ```php
+// Rolleri listele
 $roles = $zapi->roles->list();
-```
 
-### Rol Oluştur
-
-```php
+// Rol oluştur
 $result = $zapi->roles->create([
     'name' => 'Editor',
-    'description' => 'İçerik editörü',
     'permissions' => ['content.read', 'content.write']
 ]);
-```
 
-### Rol Güncelle
+// Rolü al
+$role = $zapi->roles->get('role_id');
 
-```php
+// Rolü güncelle
 $result = $zapi->roles->update('role_id', [
-    'name' => 'Senior Editor',
-    'permissions' => ['content.read', 'content.write', 'content.delete']
+    'name' => 'Senior Editor'
 ]);
-```
 
-### Rol Sil
-
-```php
+// Rolü sil
 $result = $zapi->roles->delete('role_id');
 ```
 
-### Rol Detayı
+### Kullanıcılar ve İzinler
 
 ```php
-$role = $zapi->roles->get('role_id');
-```
-
-### Rol Kullanıcıları
-
-```php
+// Rol kullanıcılarını al
 $users = $zapi->roles->getUsers('role_id');
-```
 
-### Mevcut İzinler
-
-```php
+// Mevcut izinleri al
 $permissions = $zapi->roles->getAvailablePermissions();
-```
 
-### Rol Analitikleri
-
-```php
-$analytics = $zapi->roles->getAnalytics('role_id');
+// Analitikleri al
+$analytics = $zapi->roles->getAnalytics();
 ```
 
 ## 🔔 Bildirimler (Notifications)
 
-### Bildirimleri Listele
+### Bildirim İşlemleri
 
 ```php
-$notifications = $zapi->notifications->list([
-    'limit' => 50,
-    'offset' => 0
-]);
-```
+// Bildirimleri listele
+$notifications = $zapi->notifications->list();
 
-### Bildirim Oluştur
-
-```php
-$result = $zapi->notifications->create([
-    'title' => 'Yeni Bildirim',
-    'message' => 'Bildirim mesajı',
-    'type' => 'info',
-    'recipients' => ['user_id_1', 'user_id_2']
-]);
-```
-
-### Bildirim Gönder
-
-```php
-$result = $zapi->notifications->send([
-    'notification_id' => 'notification_id'
-]);
-```
-
-### E-posta Bildirimi
-
-```php
+// E-posta gönder
 $result = $zapi->notifications->sendEmail([
     'to' => 'user@example.com',
-    'subject' => 'E-posta Konusu',
-    'body' => 'E-posta içeriği',
-    'template' => 'welcome'
+    'subject' => 'Konu',
+    'body' => 'İçerik'
 ]);
-```
 
-### SMS Bildirimi
+// Toplu e-posta gönder
+$result = $zapi->notifications->sendBulkEmail([
+    'recipients' => ['user1@example.com', 'user2@example.com'],
+    'subject' => 'Toplu E-posta',
+    'body' => 'İçerik'
+]);
 
-```php
+// SMS gönder
 $result = $zapi->notifications->sendSMS([
     'to' => '+905551234567',
     'message' => 'SMS mesajı'
 ]);
-```
 
-### Push Bildirimi
-
-```php
-$result = $zapi->notifications->sendPush([
-    'device_token' => 'device_token',
-    'title' => 'Push Başlığı',
-    'body' => 'Push mesajı'
+// Toplu SMS gönder
+$result = $zapi->notifications->sendBulkSMS([
+    'recipients' => ['+905551234567', '+905559876543'],
+    'message' => 'Toplu SMS'
 ]);
 ```
 
-### Bildirim Şablonları
+### Log ve Analitik
 
 ```php
-// Şablonları listele
-$templates = $zapi->notifications->getTemplates();
+// Log'u al
+$log = $zapi->notifications->getLog('log_id');
 
-// Şablon oluştur
-$result = $zapi->notifications->createTemplate([
-    'name' => 'welcome',
-    'subject' => 'Hoş Geldiniz',
-    'body' => '{{name}} hoş geldiniz!'
-]);
+// Analitikleri al
+$analytics = $zapi->notifications->getAnalytics();
 
-// Şablon güncelle
-$result = $zapi->notifications->updateTemplate('template_id', [
-    'subject' => 'Güncellenmiş Konu'
-]);
-
-// Şablon sil
-$result = $zapi->notifications->deleteTemplate('template_id');
+// Tekrar dene
+$result = $zapi->notifications->retry('log_id');
 ```
 
-### Bildirim İstatistikleri
+### Ayarlar ve Takip
 
 ```php
-$stats = $zapi->notifications->getStats();
+// Ayarları al
+$settings = $zapi->notifications->getSettings();
+
+// Ayarları güncelle
+$result = $zapi->notifications->updateSettings([
+    'email_enabled' => true,
+    'sms_enabled' => false
+]);
+
+// E-posta takibi
+$result = $zapi->notifications->trackEmail('tracking_id');
+
+// Genel takip
+$result = $zapi->notifications->track('log_id');
 ```
 
 ## 📧 Mail Şablonları (MailTemplates)
 
-### Şablonları Listele
+### Şablon İşlemleri
 
 ```php
+// Şablonları listele
 $templates = $zapi->mailTemplates->list();
-```
 
-### Şablon Oluştur
-
-```php
+// Şablon oluştur
 $result = $zapi->mailTemplates->create([
     'name' => 'welcome_email',
     'subject' => 'Hoş Geldiniz',
-    'body' => 'Merhaba {{name}}, hoş geldiniz!',
-    'variables' => ['name', 'email']
+    'body' => 'Merhaba {{name}}, hoş geldiniz!'
 ]);
-```
 
-### Şablon Güncelle
-
-```php
-$result = $zapi->mailTemplates->update('template_id', [
-    'subject' => 'Güncellenmiş Konu',
-    'body' => 'Güncellenmiş içerik'
-]);
-```
-
-### Şablon Sil
-
-```php
-$result = $zapi->mailTemplates->delete('template_id');
-```
-
-### Şablon Detayı
-
-```php
+// Şablonu al
 $template = $zapi->mailTemplates->get('template_id');
-```
 
-### Şablon Test Et
-
-```php
-$result = $zapi->mailTemplates->test('template_id', [
-    'variables' => ['name' => 'Test User']
+// Şablonu güncelle
+$result = $zapi->mailTemplates->update('template_id', [
+    'subject' => 'Güncellenmiş Konu'
 ]);
-```
 
-### Şablon Durumu
+// Şablonu sil
+$result = $zapi->mailTemplates->delete('template_id');
 
-```php
+// Şablon durumunu değiştir
 $result = $zapi->mailTemplates->toggleStatus('template_id');
 ```
 
-### Şablon Klonla
+### Önizleme ve Klonlama
 
 ```php
+// Şablon önizlemesi
+$result = $zapi->mailTemplates->preview('template_id', [
+    'name' => 'Test User'
+]);
+
+// Şablon klonla
 $result = $zapi->mailTemplates->clone('template_id', [
     'name' => 'cloned_template'
 ]);
@@ -1319,171 +1043,106 @@ $result = $zapi->mailTemplates->clone('template_id', [
 
 ## 🔗 Webhook Yönetimi (Webhook)
 
-### Webhook'ları Listele
+### Webhook İşlemleri
 
 ```php
+// Webhook'ları listele
 $webhooks = $zapi->webhook->list();
-```
 
-### Webhook Oluştur
-
-```php
+// Webhook oluştur
 $result = $zapi->webhook->create([
     'url' => 'https://yourapp.com/webhook',
-    'events' => ['user.created', 'response.created'],
-    'secret' => 'webhook_secret'
+    'events' => ['user.created', 'response.created']
 ]);
-```
 
-### Webhook Güncelle
-
-```php
-$result = $zapi->webhook->update('webhook_id', [
-    'url' => 'https://newapp.com/webhook',
-    'events' => ['user.updated']
-]);
-```
-
-### Webhook Sil
-
-```php
-$result = $zapi->webhook->delete('webhook_id');
-```
-
-### Webhook Detayı
-
-```php
+// Webhook'u al
 $webhook = $zapi->webhook->get('webhook_id');
-```
 
-### Webhook Test Et
+// Webhook'u güncelle
+$result = $zapi->webhook->update('webhook_id', [
+    'url' => 'https://newapp.com/webhook'
+]);
 
-```php
+// Webhook'u sil
+$result = $zapi->webhook->delete('webhook_id');
+
+// Webhook'u test et
 $result = $zapi->webhook->test('webhook_id');
-```
-
-### Webhook Durumu
-
-```php
-$result = $zapi->webhook->toggleStatus('webhook_id');
-```
-
-### Webhook Logları
-
-```php
-$logs = $zapi->webhook->getLogs('webhook_id');
 ```
 
 ## 📋 Metadata Yönetimi (Metadata)
 
-### Metadata Al
+### Metadata İşlemleri
 
 ```php
-$metadata = $zapi->metadata->get('key');
-```
+// Metadata al
+$metadata = $zapi->metadata->get('entity_type', 'entity_id', 'path');
 
-### Metadata Güncelle
+// Metadata güncelle
+$result = $zapi->metadata->update('entity_type', 'entity_id', 'path', ['value']);
 
-```php
-$result = $zapi->metadata->set('key', 'value');
-```
+// Metadata patch
+$result = $zapi->metadata->patch('entity_type', 'entity_id', 'path', ['value']);
 
-### Metadata Sil
-
-```php
-$result = $zapi->metadata->delete('key');
-```
-
-### Tüm Metadata
-
-```php
-$allMetadata = $zapi->metadata->getAll();
-```
-
-### Metadata Arama
-
-```php
-$results = $zapi->metadata->search('pattern');
-```
-
-### Metadata İstatistikleri
-
-```php
-$stats = $zapi->metadata->getStats();
+// Metadata sil
+$result = $zapi->metadata->delete('entity_type', 'entity_id', 'path');
 ```
 
 ## 🔧 OAuth Metadata (OAuthMetadata)
 
-### OAuth Metadata Al
+### OAuth Metadata İşlemleri
 
 ```php
-$metadata = $zapi->oauthMetadata->get('provider', 'key');
-```
+// Metadata al
+$metadata = $zapi->oauthMetadata->get('app_id', 'path');
 
-### OAuth Metadata Güncelle
+// Metadata güncelle
+$result = $zapi->oauthMetadata->update('app_id', 'path', ['value']);
 
-```php
-$result = $zapi->oauthMetadata->set('provider', 'key', 'value');
-```
+// Metadata patch
+$result = $zapi->oauthMetadata->patch('app_id', 'path', ['value']);
 
-### OAuth Metadata Sil
-
-```php
-$result = $zapi->oauthMetadata->delete('provider', 'key');
-```
-
-### OAuth Metadata Listele
-
-```php
-$allMetadata = $zapi->oauthMetadata->list('provider');
+// Metadata sil
+$result = $zapi->oauthMetadata->delete('app_id', 'path');
 ```
 
 ## ⚙️ Fonksiyonlar (Functions)
 
-### Fonksiyonları Listele
+### Fonksiyon İşlemleri
 
 ```php
+// Fonksiyonları listele
 $functions = $zapi->functions->list();
-```
 
-### Fonksiyon Oluştur
-
-```php
+// Fonksiyon oluştur
 $result = $zapi->functions->create([
     'name' => 'calculate_sum',
     'description' => 'İki sayıyı toplar',
-    'code' => 'function calculateSum(a, b) { return a + b; }',
-    'parameters' => ['a', 'b']
-]);
-```
-
-### Fonksiyon Güncelle
-
-```php
-$result = $zapi->functions->update('function_id', [
-    'description' => 'Güncellenmiş açıklama',
     'code' => 'function calculateSum(a, b) { return a + b; }'
 ]);
-```
 
-### Fonksiyon Sil
+// Fonksiyonu al
+$function = $zapi->functions->get('function_id');
 
-```php
+// Fonksiyonu güncelle
+$result = $zapi->functions->update('function_id', [
+    'description' => 'Güncellenmiş açıklama'
+]);
+
+// Fonksiyonu sil
 $result = $zapi->functions->delete('function_id');
 ```
 
-### Fonksiyon Çalıştır
+### Fonksiyon Çalıştırma
 
 ```php
+// Fonksiyonu çalıştır
 $result = $zapi->functions->execute('function_id', [
     'a' => 5,
     'b' => 3
 ]);
-```
 
-### Fonksiyon Test Et
-
-```php
+// Fonksiyonu test et
 $result = $zapi->functions->test('function_id', [
     'a' => 5,
     'b' => 3
@@ -1492,156 +1151,107 @@ $result = $zapi->functions->test('function_id', [
 
 ## 🛠️ Sistem (System)
 
-### Sistem Durumu
+### Sistem İşlemleri
 
 ```php
-$health = $zapi->system->getHealth();
-```
+// Sistemi yeniden başlat
+$result = $zapi->system->restart();
 
-### Sistem Bilgileri
+// Sistem durumunu al
+$status = $zapi->system->getStatus();
 
-```php
-$info = $zapi->system->getInfo();
-```
-
-### Bellek Kullanımı
-
-```php
+// Bellek kullanımını al
 $memory = $zapi->system->getMemory();
-```
-
-### Sistem Metrikleri
-
-```php
-$metrics = $zapi->system->getMetrics();
 ```
 
 ## 📊 Bilgi (Info)
 
-### Sistem Durumu
-
-```php
-$status = $zapi->info->getStatus();
-```
-
-### AI Modelleri
-
-```php
-$models = $zapi->info->getAIModels();
-```
-
 ### Sistem Bilgileri
 
 ```php
-$info = $zapi->info->getInfo();
+// Sağlık durumunu al
+$health = $zapi->info->getHealth();
+
+// Metrikleri al
+$metrics = $zapi->info->getMetrics();
+
+// Durumu al
+$status = $zapi->info->getStatus();
+
+// AI modellerini al
+$models = $zapi->info->getAIModels();
 ```
 
 ## 🔧 Yapılandırma (Config)
 
-### Yapılandırma Al
+### Yapılandırma İşlemleri
 
 ```php
+// Yapılandırmayı al
 $config = $zapi->config->get();
-```
-
-### Yapılandırma Güncelle
-
-```php
-$result = $zapi->config->update([
-    'setting_name' => 'setting_value'
-]);
 ```
 
 ## 📝 Loglar (Logs)
 
-### Logları Listele
+### Log İşlemleri
 
 ```php
-$logs = $zapi->logs->list([
-    'level' => 'error',
-    'limit' => 100
-]);
-```
+// Logları listele
+$logs = $zapi->logs->list();
 
-### Log Temizle
+// Log'u al
+$log = $zapi->logs->get('log_id');
 
-```php
-$result = $zapi->logs->clear();
-```
+// İstatistikleri al
+$stats = $zapi->logs->getStats();
 
-### Log Temizliği
-
-```php
+// Temizlik yap
 $result = $zapi->logs->cleanup();
+
+// Logları temizle
+$result = $zapi->logs->clear();
 ```
 
 ## 🐛 Debug (Debug)
 
-### Debug Modelleri
+### Debug İşlemleri
 
 ```php
+// Modelleri al
 $models = $zapi->debug->getModels();
-```
 
-### Debug Bilgileri
-
-```php
-$info = $zapi->debug->getInfo();
+// Provider manager'ı al
+$providerManager = $zapi->debug->getProviderManager();
 ```
 
 ## 📚 Dokümantasyon (Docs)
 
-### Dokümantasyon Listesi
+### Dokümantasyon İşlemleri
 
 ```php
+// Dokümantasyon listesini al
 $docs = $zapi->docs->list();
-```
 
-### Dokümantasyon Al
-
-```php
+// Dokümantasyonu al
 $doc = $zapi->docs->get('filename');
 ```
 
 ## 💾 Yedekleme (Backup)
 
-### Yedek Oluştur
+### Yedekleme İşlemleri
 
 ```php
-$result = $zapi->backup->create([
-    'type' => 'full',
-    'description' => 'Tam yedek'
-]);
-```
-
-### Yedekleri Listele
-
-```php
+// Yedekleri listele
 $backups = $zapi->backup->list();
-```
 
-### Yedek Geri Yükle
-
-```php
-$result = $zapi->backup->restore('backup_id');
-```
-
-### Yedek Sil
-
-```php
-$result = $zapi->backup->delete('backup_id');
-```
-
-### Yedek Detayı
-
-```php
+// Yedeği al
 $backup = $zapi->backup->get('backup_id');
-```
 
-### Yedek Kaydı
+// Kayıt yedeklerini al
+$recordBackups = $zapi->backup->getRecordBackups('model', 'record_id');
 
-```php
-$record = $zapi->backup->getRecord('model', 'record_id');
+// Yedeği sil
+$result = $zapi->backup->delete('backup_id');
 ```
 
 ## 📝 Hata Kodları
@@ -1672,4 +1282,4 @@ $zapi->setLogLevel('debug'); // debug, info, warning, error
 
 ---
 
-**API Referansı tamamlandı!** Tüm 31 endpoint sınıfı ve 200+ metod ile eksiksiz referans dokümantasyonu. 🚀
+**API Referansı tamamlandı!** Tüm 31 endpoint sınıfı ve 200+ gerçek metod ile eksiksiz referans dokümantasyonu. 🚀
