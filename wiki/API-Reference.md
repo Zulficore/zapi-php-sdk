@@ -71,57 +71,41 @@ $result = $zapi->auth->register([
 ### Kullanıcı Girişi
 
 ```php
-$result = $zapi->auth->login([
-    'email' => 'user@example.com',
-    'password' => 'password123'
-]);
+$result = $zapi->auth->login('user@example.com', 'password123');
 ```
 
 ### E-posta Doğrulama
 
 ```php
-$result = $zapi->auth->verifyEmail([
-    'token' => 'verification_token'
-]);
+$result = $zapi->auth->verifyEmail('user@example.com', '123456');
 ```
 
 ### Şifre Sıfırlama
 
 ```php
-$result = $zapi->auth->resetPassword([
-    'email' => 'user@example.com'
-]);
+$result = $zapi->auth->requestPasswordReset('user@example.com');
 ```
 
 ### Şifre Değiştirme
 
 ```php
-$result = $zapi->auth->changePassword([
-    'current_password' => 'old_password',
-    'new_password' => 'new_password123'
-]);
+$result = $zapi->auth->changePassword('old_password', 'new_password123');
 ```
 
 ### OTP İşlemleri
 
 ```php
-// OTP gönder
-$result = $zapi->auth->sendOTP([
-    'email' => 'user@example.com'
-]);
+// OTP gönder (telefon numarasına)
+$result = $zapi->auth->sendOTP('+905551234567', 'login');
 
 // OTP doğrula
-$result = $zapi->auth->verifyOTP([
-    'email' => 'user@example.com',
-    'otp' => '123456'
-]);
-
-// OTP ile giriş
-$result = $zapi->auth->loginWithOTP([
-    'email' => 'user@example.com',
-    'otp' => '123456'
-]);
+$result = $zapi->auth->verifyOTP('+905551234567', '123456', 'login');
 ```
+
+**Parametreler:**
+- `phone` (string, gerekli): Telefon numarası (+90 formatında)
+- `code` (string, gerekli): OTP kodu (6 haneli)
+- `purpose` (string, opsiyonel): OTP amacı (login, verification, etc.)
 
 ### Profil İşlemleri
 
@@ -278,36 +262,27 @@ $result = $zapi->user->updateProfile([
 ]);
 ```
 
-### Kullanıcı Ayarları
+### Avatar İşlemleri
 
 ```php
-// Ayarları al
-$settings = $zapi->user->getSettings();
+// Avatar yükle
+$result = $zapi->user->uploadAvatar('/path/to/avatar.jpg');
 
-// Ayarları güncelle
-$result = $zapi->user->updateSettings([
-    'language' => 'tr',
-    'timezone' => 'Europe/Istanbul',
-    'notifications' => true
-]);
+// Avatar sil
+$result = $zapi->user->deleteAvatar();
 ```
 
 ### Kullanım İstatistikleri
 
 ```php
-$usage = $zapi->user->getUsage([
-    'period' => 'monthly' // daily, weekly, monthly
-]);
+$usage = $zapi->user->getUsage();
 ```
 
 ### Kullanıcı Yanıtları
 
 ```php
 // Kullanıcının yanıtlarını listele
-$responses = $zapi->user->getResponses([
-    'limit' => 50,
-    'offset' => 0
-]);
+$responses = $zapi->user->getResponses();
 
 // Belirli bir yanıtı al
 $response = $zapi->user->getResponse('response_id');
@@ -316,13 +291,16 @@ $response = $zapi->user->getResponse('response_id');
 $result = $zapi->user->deleteResponse('response_id');
 
 // Yanıtı dışa aktar
-$export = $zapi->user->exportResponse('response_id');
+$export = $zapi->user->exportResponse('response_id', 'json');
+
+// Son yanıtı al
+$lastResponse = $zapi->user->getLastResponse();
 ```
 
 ### Kullanıcı Deaktivasyonu
 
 ```php
-$result = $zapi->user->deactivate();
+$result = $zapi->user->deactivateAccount('Hesap kapatma nedeni');
 ```
 
 ### Metadata İşlemleri
@@ -332,7 +310,13 @@ $result = $zapi->user->deactivate();
 $metadata = $zapi->user->getMetadata('key');
 
 // Metadata güncelle
-$result = $zapi->user->updateMetadata('key', 'value');
+$result = $zapi->user->updateMetadata('key', ['value' => 'data']);
+
+// Metadata patch
+$result = $zapi->user->patchMetadata('key', ['new_field' => 'value']);
+
+// Metadata sil
+$result = $zapi->user->deleteMetadata('key');
 ```
 
 ## 🤖 AI Sohbet (Responses)
@@ -354,31 +338,52 @@ $response = $zapi->responses->create([
 - `temperature` (float, opsiyonel): Yaratıcılık seviyesi (0-1)
 - `max_tokens` (int, opsiyonel): Maksimum token sayısı
 
-### Stream Sohbet
+### Yanıtları Listele
 
 ```php
-$streamResponse = $zapi->responses->createStream([
-    'model' => 'gpt-4',
-    'messages' => [
-        ['role' => 'user', 'content' => 'Uzun bir hikaye yaz']
-    ]
+$responses = $zapi->responses->list();
+```
+
+### Yanıt İstatistikleri
+
+```php
+$stats = $zapi->responses->getStats();
+```
+
+### Yanıt Arama
+
+```php
+$results = $zapi->responses->search([
+    'query' => 'arama terimi',
+    'limit' => 20
 ]);
 ```
 
-### Sohbet Geçmişi
+### Yanıt Kategorileri
 
 ```php
-// Sohbet geçmişini al
-$history = $zapi->responses->getHistory([
-    'limit' => 50,
-    'offset' => 0
+$categories = $zapi->responses->getCategories();
+```
+
+### Yanıt Etiketleri
+
+```php
+$tags = $zapi->responses->getTags();
+```
+
+### Favori İşlemleri
+
+```php
+$result = $zapi->responses->toggleFavorite('response_id');
+```
+
+### Yanıt Paylaşımı
+
+```php
+$result = $zapi->responses->share('response_id', [
+    'public' => true,
+    'expires_at' => '2025-12-31'
 ]);
-
-// Belirli bir sohbeti al
-$conversation = $zapi->responses->getConversation('conversation_id');
-
-// Sohbeti sil
-$result = $zapi->responses->deleteConversation('conversation_id');
 ```
 
 ### Yanıt İşlemleri
