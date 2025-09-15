@@ -1,0 +1,40 @@
+# Composer
+/vendor/
+composer.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Cache
+cache/
+tmp/
+
+# Coverage
+coverage/
+.phpunit.result.cache
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Test files
+test-real-api.php
+simple-test.php
+chat-test.php
+comprehensive-test.php
+
+# Documentation
+docs/

@@ -1,0 +1,61 @@
+{
+    "name": "zulficore/zapi-php-sdk",
+    "description": "ZAPI PHP SDK - Complete API wrapper for ZAPI services with authentication, AI chat, realtime features",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["zapi", "api", "sdk", "php", "wrapper", "ai", "chat", "realtime", "zulficore"],
+    "homepage": "https://github.com/zulficore/zapi-php-sdk",
+    "support": {
+        "issues": "https://github.com/zulficore/zapi-php-sdk/issues",
+        "source": "https://github.com/zulficore/zapi-php-sdk"
+    },
+    "authors": [
+        {
+            "name": "ZAPI Team",
+            "email": "dev@zapi.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.0",
+        "psr/http-message": "^1.0",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0",
+        "phpstan/phpstan": "^1.10",
+        "squizlabs/php_codesniffer": "^3.7",
+        "vimeo/psalm": "^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "ZAPI\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ZAPI\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test-coverage": "phpunit --coverage-html coverage",
+        "phpstan": "phpstan analyse src tests",
+        "cs-check": "phpcs src tests",
+        "cs-fix": "phpcbf src tests",
+        "quality": [
+            "@cs-check",
+            "@phpstan",
+            "@test"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
