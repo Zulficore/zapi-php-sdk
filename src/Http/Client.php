@@ -431,6 +431,7 @@ class Client implements ClientInterface
         $data = json_decode($body, true);
         
         $message = $data['message'] ?? $data['error'] ?? 'Bilinmeyen hata';
+        $message = is_array($message) ? json_encode($message) : (string)$message;
         $code = $data['code'] ?? $statusCode;
         
         switch ($statusCode) {
