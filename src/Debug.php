@@ -57,8 +57,4 @@ class Debug
      * echo "ProviderManager durumu: " . $providerManager['status'];
      * echo "Aktif sağlayıcılar: " . count($providerManager['activeProviders']);
      */
-    public function getProviderManager(): array
-    {
-        return $this->zapi->getHttpClient()->get('/debug/provider-manager');
-    }
 }

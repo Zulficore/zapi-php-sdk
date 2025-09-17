@@ -99,21 +99,6 @@ class User
      * $avatar = $zapi->user->uploadAvatar('/path/to/avatar.jpg');
      * echo "Avatar URL: " . $avatar['avatar']['url'];
      */
-    public function uploadAvatar(string $filePath): array
-    {
-        if (!file_exists($filePath)) {
-            throw new ValidationException('Avatar dosyası bulunamadı: ' . $filePath);
-        }
-        
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        $mimeType = mime_content_type($filePath);
-        
-        if (!in_array($mimeType, $allowedTypes)) {
-            throw new ValidationException('Desteklenmeyen dosya formatı: ' . $mimeType);
-        }
-        
-        return $this->zapi->getHttpClient()->postMultipart('/user/avatar', [], ['avatar' => $filePath]);
-    }
     
     /**
      * Kullanıcının avatar resmini siler
@@ -127,10 +112,6 @@ class User
      * $result = $zapi->user->deleteAvatar();
      * echo $result['message']; // "Avatar başarıyla silindi"
      */
-    public function deleteAvatar(): array
-    {
-        return $this->zapi->getHttpClient()->delete('/user/avatar');
-    }
     
     /**
      * Kullanıcının kullanım istatistiklerini getirir
@@ -240,19 +221,6 @@ class User
      * $export = $zapi->user->exportResponse('507f1f77bcf86cd799439012', 'json');
      * file_put_contents('response.json', $export['export']['content']);
      */
-    public function exportResponse(string $responseId, string $format = 'json'): array
-    {
-        if (empty($responseId)) {
-            throw new ValidationException('Yanıt ID\'si boş olamaz');
-        }
-        
-        $allowedFormats = ['json', 'txt', 'markdown'];
-        if (!in_array($format, $allowedFormats)) {
-            throw new ValidationException('Desteklenmeyen format: ' . $format);
-        }
-        
-        return $this->zapi->getHttpClient()->get("/user/responses/{$responseId}/export", ['format' => $format]);
-    }
     
     /**
      * Kullanıcının en son AI yanıtını getirir
@@ -288,13 +256,6 @@ class User
      * $result = $zapi->user->deactivateAccount('Geçici olarak kullanmıyorum');
      * echo $result['message']; // "Hesap başarıyla deaktive edildi"
      */
-    public function deactivateAccount(string $reason = ''): array
-    {
-        return $this->zapi->getHttpClient()->post('/user/deactivate', [
-            'reason' => $reason,
-            'confirmation' => 'DEACTIVATE'
-        ]);
-    }
     
     /**
      * Kullanıcı hesabını kalıcı olarak siler
@@ -311,16 +272,9 @@ class User
      * $result = $zapi->user->deleteAccount('current_password');
      * echo $result['message']; // "Hesap başarıyla silindi"
      */
-    public function deleteAccount(string $password): array
+    public function deleteAccount(): array
     {
-        if (empty($password)) {
-            throw new ValidationException('Şifre boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->delete('/user/account', [
-            'password' => $password,
-            'confirmation' => 'DELETE'
-        ]);
+        return $this->zapi->getHttpClient()->delete('/user/account');
     }
     
     /**
@@ -367,7 +321,7 @@ class User
             throw new ValidationException('Metadata path boş olamaz');
         }
         
-        return $this->zapi->getHttpClient()->put("/user/metadata/{$path}", ['value' => $value]);
+        return $this->zapi->getHttpClient()->put("/user/metadata/{$path}", $value);
     }
     
     /**
@@ -391,7 +345,7 @@ class User
             throw new ValidationException('Metadata path boş olamaz');
         }
         
-        return $this->zapi->getHttpClient()->patch("/user/metadata/{$path}", ['value' => $value]);
+        return $this->zapi->getHttpClient()->patch("/user/metadata/{$path}", $value);
     }
     
     /**
@@ -415,5 +369,46 @@ class User
         }
         
         return $this->zapi->getHttpClient()->delete("/user/metadata/{$path}");
+    }
+
+    /**
+     * Kullanıcının konuşmalarını listeler
+     * 
+     * Bu metod kullanıcının tüm konuşmalarını sayfalama ile listeler.
+     * 
+     * @param array $options Filtreleme ve sayfalama seçenekleri
+     * @return array Konuşma listesi
+     * @throws ZAPIException Sunucu hatası
+     * 
+     * @example
+     * $conversations = $zapi->user->getConversations([
+     *     'page' => 1,
+     *     'limit' => 20,
+     *     'search' => 'test',
+     *     'status' => 'completed'
+     * ]);
+     */
+    public function getConversations(array $options = []): array
+    {
+        return $this->zapi->getHttpClient()->get('/user/conversations', $options);
+    }
+
+    /**
+     * Belirli bir konuşmayı getirir
+     * 
+     * Bu metod belirtilen ID'ye sahip konuşmanın detaylarını getirir.
+     * 
+     * @param string $responseId Konuşma ID'si
+     * @return array Konuşma detayları
+     * @throws ValidationException Geçersiz ID
+     * @throws ZAPIException Sunucu hatası
+     * 
+     * @example
+     * $conversation = $zapi->user->getConversation('64f1a2b3c4d5e6f7g8h9i0j1');
+     * echo "Konuşma başlığı: " . $conversation['data']['conversation']['title'];
+     */
+    public function getConversation(string $responseId): array
+    {
+        return $this->zapi->getHttpClient()->get("/user/conversations/{$responseId}");
     }
 }

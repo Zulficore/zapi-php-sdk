@@ -89,14 +89,6 @@ class Plans
     /**
      * Plan durumunu değiştirir (admin)
      */
-    public function toggleStatus(string $planId): array
-    {
-        if (empty($planId)) {
-            throw new ValidationException('Plan ID\'si boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->patch("/plans/{$planId}/toggle-status");
-    }
     
     /**
      * Plan abonelerini listeler (admin)
@@ -154,18 +146,6 @@ class Plans
     /**
      * Plan metadata bilgilerini kısmi olarak günceller
      */
-    public function patchMetadata(string $planId, string $path, array $value): array
-    {
-        if (empty($planId)) {
-            throw new ValidationException('Plan ID\'si boş olamaz');
-        }
-        
-        if (empty($path)) {
-            throw new ValidationException('Metadata path boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->patch("/plans/{$planId}/metadata/{$path}", ['value' => $value]);
-    }
     
     /**
      * Plan metadata bilgilerini siler

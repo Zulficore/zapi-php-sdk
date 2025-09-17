@@ -46,7 +46,14 @@ class AIProvider
      */
     public function list(array $options = []): array
     {
-        return $this->zapi->getHttpClient()->get('/ai-providers', $options);
+        // Orijinal API'ye uygun header ekle
+        $headers = [];
+        if (isset($options['appId'])) {
+            $headers['x-app-id'] = $options['appId'];
+            unset($options['appId']); // Header'a ekledikten sonra data'dan çıkar
+        }
+        
+        return $this->zapi->getHttpClient()->get('/ai-provider', $options, $headers);
     }
     
     /**
@@ -67,7 +74,7 @@ class AIProvider
      */
     public function create(array $data): array
     {
-        return $this->zapi->getHttpClient()->post('/ai-providers', $data);
+        return $this->zapi->getHttpClient()->post('/ai-provider/providers', $data);
     }
     
     /**
@@ -88,7 +95,7 @@ class AIProvider
             throw new ValidationException('Sağlayıcı ID\'si boş olamaz');
         }
         
-        return $this->zapi->getHttpClient()->get("/ai-providers/{$providerId}");
+        return $this->zapi->getHttpClient()->get("/ai-provider/providers/{$providerId}");
     }
     
     /**
@@ -112,7 +119,7 @@ class AIProvider
             throw new ValidationException('Sağlayıcı ID\'si boş olamaz');
         }
         
-        return $this->zapi->getHttpClient()->put("/ai-providers/{$providerId}", $data);
+        return $this->zapi->getHttpClient()->put("/ai-provider/providers/{$providerId}", $data);
     }
     
     /**
@@ -133,7 +140,7 @@ class AIProvider
             throw new ValidationException('Sağlayıcı ID\'si boş olamaz');
         }
         
-        return $this->zapi->getHttpClient()->delete("/ai-providers/{$providerId}");
+        return $this->zapi->getHttpClient()->delete("/ai-provider/providers/{$providerId}");
     }
     
     /**
@@ -148,14 +155,6 @@ class AIProvider
      * $test = $zapi->aiProvider->test('507f1f77bcf86cd799439011');
      * echo "Test sonucu: " . $test['status'];
      */
-    public function test(string $providerId): array
-    {
-        if (empty($providerId)) {
-            throw new ValidationException('Sağlayıcı ID\'si boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->post("/ai-providers/{$providerId}/test");
-    }
     
     /**
      * AI modellerini listeler
@@ -170,9 +169,23 @@ class AIProvider
      *     echo "Model: " . $model['name'];
      * }
      */
+    public function testProvider(string $providerId, ?string $overrideKey = null): array
+    {
+        if (empty($providerId)) {
+            throw new ValidationException('Sağlayıcı ID\'si boş olamaz');
+        }
+        
+        $data = [];
+        if ($overrideKey) {
+            $data['override_key'] = $overrideKey;
+        }
+        
+        return $this->zapi->getHttpClient()->post("/ai-provider/providers/{$providerId}/test", $data);
+    }
+    
     public function getModels(array $options = []): array
     {
-        return $this->zapi->getHttpClient()->get('/ai-providers/models', $options);
+        return $this->zapi->getHttpClient()->get('/ai-provider/models', $options);
     }
     
     /**
@@ -193,7 +206,7 @@ class AIProvider
             throw new ValidationException('Model ID\'si boş olamaz');
         }
         
-        return $this->zapi->getHttpClient()->get("/ai-providers/models/{$modelId}");
+        return $this->zapi->getHttpClient()->get("/ai-provider/models/{$modelId}");
     }
     
     /**
@@ -217,7 +230,7 @@ class AIProvider
             throw new ValidationException('Model ID\'si boş olamaz');
         }
         
-        return $this->zapi->getHttpClient()->put("/ai-providers/models/{$modelId}", $data);
+        return $this->zapi->getHttpClient()->put("/ai-provider/models/{$modelId}", $data);
     }
     
     /**
@@ -238,7 +251,40 @@ class AIProvider
             throw new ValidationException('Model ID\'si boş olamaz');
         }
         
-        return $this->zapi->getHttpClient()->delete("/ai-providers/models/{$modelId}");
+        return $this->zapi->getHttpClient()->delete("/ai-provider/models/{$modelId}");
+    }
+    
+    /**
+     * Varsayılan modelleri getirir
+     */
+    public function getDefaultModels(string $category = ''): array
+    {
+        $endpoint = $category ? "/ai-provider/models/default/{$category}" : '/ai-provider/models/default';
+        return $this->zapi->getHttpClient()->get($endpoint);
+    }
+    
+    /**
+     * Yeni model oluşturur
+     */
+    public function createModel(array $data): array
+    {
+        return $this->zapi->getHttpClient()->post('/ai-provider/models', $data);
+    }
+    
+    /**
+     * Model testi yapar
+     */
+    public function testModel(string $modelId): array
+    {
+        return $this->zapi->getHttpClient()->post("/ai-provider/models/{$modelId}/test");
+    }
+    
+    /**
+     * Cache'i temizler
+     */
+    public function clearCache(): array
+    {
+        return $this->zapi->getHttpClient()->post('/ai-provider/cache/clear');
     }
     
     /**
@@ -252,8 +298,51 @@ class AIProvider
      * echo "Varsayılan chat modeli: " . $defaults['chat'];
      * echo "Varsayılan embedding modeli: " . $defaults['embedding'];
      */
-    public function getDefaultModels(): array
-    {
-        return $this->zapi->getHttpClient()->get('/ai-providers/models/defaults');
-    }
+
+    /**
+     * Yeni model oluşturur
+     * 
+     * Bu metod yeni bir AI model oluşturur.
+     * 
+     * @param array $data Model verileri
+     * @return array Oluşturulan model
+     * @throws ValidationException Geçersiz veri
+     * @throws ZAPIException Sunucu hatası
+     * 
+     * @example
+     * $model = $zapi->aiProvider->createModel([
+     *     'name' => 'gpt-4',
+     *     'label' => 'GPT-4',
+     *     'providerId' => 'provider_123',
+     *     'category' => 'text'
+     * ]);
+     */
+
+    /**
+     * Model testi yapar
+     * 
+     * Bu metod belirtilen modeli test eder.
+     * 
+     * @param string $modelId Model ID'si
+     * @return array Test sonucu
+     * @throws ValidationException Geçersiz model ID
+     * @throws ZAPIException Sunucu hatası
+     * 
+     * @example
+     * $result = $zapi->aiProvider->testModel('model_123');
+     * echo "Test sonucu: " . $result['message'];
+     */
+
+    /**
+     * Cache'i temizler
+     * 
+     * Bu metod AI provider cache'ini temizler.
+     * 
+     * @return array Temizleme sonucu
+     * @throws ZAPIException Sunucu hatası
+     * 
+     * @example
+     * $result = $zapi->aiProvider->clearCache();
+     * echo "Cache temizlendi: " . $result['message'];
+     */
 }

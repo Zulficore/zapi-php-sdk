@@ -367,4 +367,28 @@ class AuthOAuth
         
         return $this->zapi->getHttpClient()->delete("/auth/oauth/{$appId}/metadata/{$path}");
     }
+    
+    /**
+     * OAuth sağlayıcılarını getirir
+     */
+    public function getProviders(string $appId): array
+    {
+        return $this->zapi->getHttpClient()->get("/auth/oauth/providers/{$appId}");
+    }
+    
+    /**
+     * OAuth URL oluşturur
+     */
+    public function generateUrl(array $data): array
+    {
+        return $this->zapi->getHttpClient()->post('/auth/oauth/generate-url', $data);
+    }
+    
+    /**
+     * OAuth secret test eder
+     */
+    public function testSecret(array $data): array
+    {
+        return $this->zapi->getHttpClient()->post('/auth/oauth/test-secret', $data);
+    }
 }

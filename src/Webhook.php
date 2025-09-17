@@ -45,26 +45,10 @@ class Webhook
     /**
      * Webhook detaylarını getirir
      */
-    public function get(string $webhookId): array
-    {
-        if (empty($webhookId)) {
-            throw new ValidationException('Webhook ID\'si boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->get("/webhook/{$webhookId}");
-    }
     
     /**
      * Webhook bilgilerini günceller
      */
-    public function update(string $webhookId, array $data): array
-    {
-        if (empty($webhookId)) {
-            throw new ValidationException('Webhook ID\'si boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->put("/webhook/{$webhookId}", $data);
-    }
     
     /**
      * Webhook'u siler

@@ -296,18 +296,6 @@ class Content
      *     'title' => 'Güncellenmiş SEO Başlık'
      * ]);
      */
-    public function patchMetadata(string $contentId, string $path, array $value): array
-    {
-        if (empty($contentId)) {
-            throw new ValidationException('İçerik ID\'si boş olamaz');
-        }
-        
-        if (empty($path)) {
-            throw new ValidationException('Metadata path boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->patch("/content/{$contentId}/metadata/{$path}", ['value' => $value]);
-    }
     
     /**
      * İçerik metadata bilgilerini siler

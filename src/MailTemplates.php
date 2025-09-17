@@ -81,14 +81,6 @@ class MailTemplates
     /**
      * E-posta şablonu durumunu değiştirir
      */
-    public function toggleStatus(string $templateId): array
-    {
-        if (empty($templateId)) {
-            throw new ValidationException('Şablon ID\'si boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->patch("/mail-templates/{$templateId}/toggle-status");
-    }
     
     /**
      * E-posta şablonunu önizler

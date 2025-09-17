@@ -39,7 +39,14 @@ class Notifications
      */
     public function sendEmail(array $data): array
     {
-        return $this->zapi->getHttpClient()->post('/notifications/email/send', $data);
+        // Orijinal API'ye uygun header ekle
+        $headers = [];
+        if (isset($data['appId'])) {
+            $headers['x-app-id'] = $data['appId'];
+            unset($data['appId']); // Header'a ekledikten sonra data'dan çıkar
+        }
+        
+        return $this->zapi->getHttpClient()->post('/notifications/email/send', $data, $headers);
     }
     
     /**

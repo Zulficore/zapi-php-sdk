@@ -49,9 +49,18 @@ class AuthFirebase
             throw new ValidationException('Firebase token boş olamaz');
         }
         
-        return $this->zapi->getHttpClient()->post('/auth/firebase/google', array_merge([
+        $data = array_merge([
             'idToken' => $firebaseToken
-        ], $options));
+        ], $options);
+        
+        // Orijinal API'ye uygun header ekle
+        $headers = [];
+        if (isset($options['appId'])) {
+            $headers['x-app-id'] = $options['appId'];
+            unset($data['appId']); // Header'a ekledikten sonra data'dan çıkar
+        }
+        
+        return $this->zapi->getHttpClient()->post('/auth/firebase/google', $data, $headers);
     }
     
     /**
@@ -178,5 +187,13 @@ class AuthFirebase
     public function healthCheck(): array
     {
         return $this->zapi->getHttpClient()->get('/auth/firebase/health');
+    }
+    
+    /**
+     * Kullanıcı durumunu getirir
+     */
+    public function getUserStatus(): array
+    {
+        return $this->zapi->getHttpClient()->get('/auth/firebase/user/status');
     }
 }

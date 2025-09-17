@@ -179,6 +179,22 @@ class Apps
     
     /**
      * Belirli uygulamanın istatistiklerini getirir
+     */
+    public function getAppStats(string $appId, array $options = []): array
+    {
+        return $this->zapi->getHttpClient()->get("/apps/stats/{$appId}", $options);
+    }
+    
+    /**
+     * Uygulama kullanım sayaçlarını sıfırlar
+     */
+    public function resetUsage(string $appId): array
+    {
+        return $this->zapi->getHttpClient()->post("/apps/reset-usage/{$appId}");
+    }
+    
+    /**
+     * Belirli uygulamanın istatistiklerini getirir
      * 
      * Bu metod belirtilen uygulamanın detaylı istatistiklerini getirir.
      * 
@@ -195,14 +211,6 @@ class Apps
      *     'endDate' => '2024-01-31'
      * ]);
      */
-    public function getAppStats(string $appId, array $options = []): array
-    {
-        if (empty($appId)) {
-            throw new ValidationException('Uygulama ID\'si boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->get("/apps/stats/{$appId}", $options);
-    }
     
     /**
      * Uygulama kullanım sayaçlarını sıfırlar
@@ -218,14 +226,6 @@ class Apps
      * $result = $zapi->apps->resetUsage('507f1f77bcf86cd799439011');
      * echo "Kullanım sayaçları sıfırlandı: " . $result['message'];
      */
-    public function resetUsage(string $appId): array
-    {
-        if (empty($appId)) {
-            throw new ValidationException('Uygulama ID\'si boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->post("/apps/reset-usage/{$appId}");
-    }
     
     /**
      * Uygulama durumunu değiştirir
@@ -241,14 +241,6 @@ class Apps
      * $result = $zapi->apps->toggleStatus('507f1f77bcf86cd799439011');
      * echo "Uygulama durumu değiştirildi: " . $result['message'];
      */
-    public function toggleStatus(string $appId): array
-    {
-        if (empty($appId)) {
-            throw new ValidationException('Uygulama ID\'si boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->patch("/apps/toggle-status/{$appId}");
-    }
     
     /**
      * Uygulamanın metadata bilgilerini getirir
@@ -305,7 +297,7 @@ class Apps
             throw new ValidationException('Metadata path boş olamaz');
         }
         
-        return $this->zapi->getHttpClient()->put("/apps/{$appId}/metadata/{$path}", ['value' => $value]);
+        return $this->zapi->getHttpClient()->put("/apps/{$appId}/metadata/{$path}", $value);
     }
     
     /**
@@ -336,7 +328,7 @@ class Apps
             throw new ValidationException('Metadata path boş olamaz');
         }
         
-        return $this->zapi->getHttpClient()->patch("/apps/{$appId}/metadata/{$path}", ['value' => $value]);
+        return $this->zapi->getHttpClient()->patch("/apps/{$appId}/metadata/{$path}", $value);
     }
     
     /**

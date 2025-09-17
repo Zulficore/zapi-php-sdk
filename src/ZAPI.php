@@ -35,6 +35,10 @@ use ZAPI\Webhook;
 use ZAPI\Functions;
 use ZAPI\OAuthMetadata;
 use ZAPI\Metadata;
+use ZAPI\Video;
+use ZAPI\Users;
+use ZAPI\Logger;
+use ZAPI\AppleTest;
 use ZAPI\Http\Client;
 use ZAPI\Exceptions\ZAPIException;
 
@@ -121,6 +125,10 @@ class ZAPI
     public Functions $functions;
     public OAuthMetadata $oauthMetadata;
     public Metadata $metadata;
+    public Video $video;
+    public Users $users;
+    public Logger $logger;
+    public AppleTest $appleTest;
     
     /**
      * ZAPI constructor
@@ -199,6 +207,10 @@ class ZAPI
         $this->functions = new Functions($this);
         $this->oauthMetadata = new OAuthMetadata($this);
         $this->metadata = new Metadata($this);
+        $this->video = new Video($this);
+        $this->users = new Users($this);
+        $this->logger = new Logger($this);
+        $this->appleTest = new AppleTest($this);
     }
     
     /**

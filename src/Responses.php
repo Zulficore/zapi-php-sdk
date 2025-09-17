@@ -136,14 +136,6 @@ class Responses
      *     'tags' => ['ai', 'chat']
      * ]);
      */
-    public function update(string $responseId, array $data): array
-    {
-        if (empty($responseId)) {
-            throw new ValidationException('Yanıt ID\'si boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->put("/responses/{$responseId}", $data);
-    }
     
     /**
      * AI yanıtını siler
@@ -183,19 +175,6 @@ class Responses
      * $export = $zapi->responses->export('507f1f77bcf86cd799439012', 'json');
      * file_put_contents('response.json', $export['content']);
      */
-    public function export(string $responseId, string $format = 'json'): array
-    {
-        if (empty($responseId)) {
-            throw new ValidationException('Yanıt ID\'si boş olamaz');
-        }
-        
-        $allowedFormats = ['json', 'txt', 'markdown', 'pdf'];
-        if (!in_array($format, $allowedFormats)) {
-            throw new ValidationException('Desteklenmeyen format: ' . $format);
-        }
-        
-        return $this->zapi->getHttpClient()->get("/responses/{$responseId}/export", ['format' => $format]);
-    }
     
     /**
      * AI yanıt istatistiklerini getirir
@@ -261,10 +240,6 @@ class Responses
      *     echo "Kategori: " . $category['name'];
      * }
      */
-    public function getCategories(): array
-    {
-        return $this->zapi->getHttpClient()->get('/responses/categories');
-    }
     
     /**
      * AI yanıt etiketlerini listeler
@@ -280,10 +255,6 @@ class Responses
      *     echo "Etiket: " . $tag['name'] . " (" . $tag['count'] . ")";
      * }
      */
-    public function getTags(): array
-    {
-        return $this->zapi->getHttpClient()->get('/responses/tags');
-    }
     
     /**
      * AI yanıtını favorilere ekler/çıkarır
@@ -299,14 +270,6 @@ class Responses
      * $result = $zapi->responses->toggleFavorite('507f1f77bcf86cd799439012');
      * echo "Favori durumu değiştirildi: " . $result['message'];
      */
-    public function toggleFavorite(string $responseId): array
-    {
-        if (empty($responseId)) {
-            throw new ValidationException('Yanıt ID\'si boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->patch("/responses/{$responseId}/favorite");
-    }
     
     /**
      * AI yanıtını paylaşır
@@ -326,12 +289,4 @@ class Responses
      * ]);
      * echo "Paylaşım linki: " . $share['shareUrl'];
      */
-    public function share(string $responseId, array $options = []): array
-    {
-        if (empty($responseId)) {
-            throw new ValidationException('Yanıt ID\'si boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->post("/responses/{$responseId}/share", $options);
-    }
 }

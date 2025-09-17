@@ -1,6 +1,6 @@
 {
     "name": "zulficore/zapi-php-sdk",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "ZAPI PHP SDK - Complete API wrapper for ZAPI services with authentication, AI chat, realtime features",
     "type": "library",
     "license": "MIT",

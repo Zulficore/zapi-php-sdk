@@ -49,15 +49,13 @@ class Images
      * ]);
      * echo "Resim URL: " . $image['data'][0]['url'];
      */
-    public function generate(string $prompt, array $options = []): array
+    public function generations(array $data): array
     {
-        if (empty($prompt)) {
+        if (empty($data['prompt'])) {
             throw new ValidationException('Prompt boş olamaz');
         }
         
-        return $this->zapi->getHttpClient()->post('/images/generations', array_merge([
-            'prompt' => $prompt
-        ], $options));
+        return $this->zapi->getHttpClient()->post('/images/generations', $data);
     }
     
     /**
@@ -76,9 +74,13 @@ class Images
      * // Bu metod henüz implement edilmemiş
      * // $edited = $zapi->images->edit('/path/to/image.png', 'Kırmızı araba ekle');
      */
-    public function edit(string $imagePath, string $prompt, array $options = []): array
+    public function edits(array $data): array
     {
-        throw new ZAPIException('Bu özellik henüz implement edilmemiş', 501);
+        if (empty($data['image']) || empty($data['prompt'])) {
+            throw new ValidationException('Image ve prompt boş olamaz');
+        }
+        
+        return $this->zapi->getHttpClient()->post('/images/edits', $data);
     }
     
     /**
@@ -96,8 +98,12 @@ class Images
      * // Bu metod henüz implement edilmemiş
      * // $variations = $zapi->images->createVariations('/path/to/image.png');
      */
-    public function createVariations(string $imagePath, array $options = []): array
+    public function variations(array $data): array
     {
-        throw new ZAPIException('Bu özellik henüz implement edilmemiş', 501);
+        if (empty($data['image'])) {
+            throw new ValidationException('Image boş olamaz');
+        }
+        
+        return $this->zapi->getHttpClient()->post('/images/variations', $data);
     }
 }

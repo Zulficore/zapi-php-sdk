@@ -47,16 +47,13 @@ class Audio
      * $speech = $zapi->audio->textToSpeech('Merhaba dünya', 'tr-TR');
      * echo "Ses dosyası: " . $speech['audio']['url'];
      */
-    public function textToSpeech(string $text, string $voice = 'alloy', array $options = []): array
+    public function speech(array $data): array
     {
-        if (empty($text)) {
-            throw new ValidationException('Metin boş olamaz');
+        if (empty($data['input'])) {
+            throw new ValidationException('Input boş olamaz');
         }
         
-        return $this->zapi->getHttpClient()->post('/audio/speech', array_merge([
-            'input' => $text,
-            'voice' => $voice
-        ], $options));
+        return $this->zapi->getHttpClient()->post('/audio/speech', $data);
     }
     
     /**
@@ -74,9 +71,13 @@ class Audio
      * // Bu metod henüz implement edilmemiş
      * // $transcription = $zapi->audio->speechToText('/path/to/audio.mp3');
      */
-    public function speechToText(string $filePath, array $options = []): array
+    public function transcriptions(array $data): array
     {
-        throw new ZAPIException('Bu özellik henüz implement edilmemiş', 501);
+        if (empty($data['file'])) {
+            throw new ValidationException('File boş olamaz');
+        }
+        
+        return $this->zapi->getHttpClient()->post('/audio/transcriptions', $data);
     }
     
     /**
@@ -95,8 +96,12 @@ class Audio
      * // Bu metod henüz implement edilmemiş
      * // $translation = $zapi->audio->translateAudio('/path/to/audio.mp3', 'en');
      */
-    public function translateAudio(string $filePath, string $targetLanguage, array $options = []): array
+    public function translations(array $data): array
     {
-        throw new ZAPIException('Bu özellik henüz implement edilmemiş', 501);
+        if (empty($data['file'])) {
+            throw new ValidationException('File boş olamaz');
+        }
+        
+        return $this->zapi->getHttpClient()->post('/audio/translations', $data);
     }
 }

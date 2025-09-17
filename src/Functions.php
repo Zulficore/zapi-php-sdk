@@ -31,7 +31,14 @@ class Functions
      */
     public function list(array $options = []): array
     {
-        return $this->zapi->getHttpClient()->get('/functions', $options);
+        // Orijinal API'ye uygun header ekle
+        $headers = [];
+        if (isset($options['appId'])) {
+            $headers['x-app-id'] = $options['appId'];
+            unset($options['appId']); // Header'a ekledikten sonra data'dan çıkar
+        }
+        
+        return $this->zapi->getHttpClient()->get('/functions', $options, $headers);
     }
     
     /**
@@ -45,52 +52,18 @@ class Functions
     /**
      * Fonksiyon detaylarını getirir
      */
-    public function get(string $functionId): array
-    {
-        if (empty($functionId)) {
-            throw new ValidationException('Fonksiyon ID\'si boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->get("/functions/{$functionId}");
-    }
     
     /**
      * Fonksiyon bilgilerini günceller
      */
-    public function update(string $functionId, array $data): array
-    {
-        if (empty($functionId)) {
-            throw new ValidationException('Fonksiyon ID\'si boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->put("/functions/{$functionId}", $data);
-    }
     
     /**
      * Fonksiyonu siler
      */
-    public function delete(string $functionId): array
-    {
-        if (empty($functionId)) {
-            throw new ValidationException('Fonksiyon ID\'si boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->delete("/functions/{$functionId}");
-    }
     
     /**
      * Fonksiyonu çalıştırır
      */
-    public function execute(string $functionId, array $parameters = []): array
-    {
-        if (empty($functionId)) {
-            throw new ValidationException('Fonksiyon ID\'si boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->post("/functions/{$functionId}/execute", [
-            'parameters' => $parameters
-        ]);
-    }
     
     /**
      * Fonksiyonu test eder

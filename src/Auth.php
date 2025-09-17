@@ -62,7 +62,14 @@ class Auth
      */
     public function register(array $data): array
     {
-        return $this->zapi->getHttpClient()->post('/auth/register', $data);
+        // Orijinal API'ye uygun header ekle
+        $headers = [];
+        if (isset($data['appId'])) {
+            $headers['x-app-id'] = $data['appId'];
+            unset($data['appId']); // Header'a ekledikten sonra data'dan çıkar
+        }
+        
+        return $this->zapi->getHttpClient()->post('/auth/register', $data, $headers);
     }
     
     /**
@@ -83,12 +90,28 @@ class Auth
      * $zapi->setApiKey($login['token']);
      * echo "Hoş geldin " . $login['user']['firstName'];
      */
-    public function login(string $emailOrPhone, string $password, array $options = []): array
+    public function login(?string $email = null, ?string $phone = null, string $password, array $options = []): array
     {
-        return $this->zapi->getHttpClient()->post('/auth/login', array_merge([
-            'emailOrPhone' => $emailOrPhone,
-            'password' => $password
-        ], $options));
+        $data = ['password' => $password];
+        
+        if ($email) {
+            $data['email'] = $email;
+        }
+        
+        if ($phone) {
+            $data['phone'] = $phone;
+        }
+        
+        $data = array_merge($data, $options);
+        
+        // Orijinal API'ye uygun header ekle
+        $headers = [];
+        if (isset($options['appId'])) {
+            $headers['x-app-id'] = $options['appId'];
+            unset($data['appId']); // Header'a ekledikten sonra data'dan çıkar
+        }
+        
+        return $this->zapi->getHttpClient()->post('/auth/login', $data, $headers);
     }
     
     /**
@@ -107,10 +130,11 @@ class Auth
      * $result = $zapi->auth->sendVerification('user@example.com', 'email');
      * echo "Doğrulama kodu gönderildi: " . $result['message'];
      */
-    public function sendVerification(string $emailOrPhone, string $type = 'email'): array
+    public function sendVerification(?string $email, ?string $phone, string $type): array
     {
         return $this->zapi->getHttpClient()->post('/auth/send-verification', [
-            'emailOrPhone' => $emailOrPhone,
+            'email' => $email,
+            'phone' => $phone,
             'type' => $type
         ]);
     }
@@ -131,11 +155,10 @@ class Auth
      * $result = $zapi->auth->verifyEmail('user@example.com', '123456');
      * echo "Email doğrulandı: " . $result['message'];
      */
-    public function verifyEmail(string $email, string $code): array
+    public function verifyEmail(string $token): array
     {
         return $this->zapi->getHttpClient()->post('/auth/verify-email', [
-            'email' => $email,
-            'code' => $code
+            'token' => $token
         ]);
     }
     
@@ -145,21 +168,25 @@ class Auth
      * Bu metod email, telefon veya diğer doğrulama
      * işlemlerini gerçekleştirir.
      * 
-     * @param array $data Doğrulama verileri
+     * @param string|null $email Email adresi
+     * @param string|null $phone Telefon numarası
+     * @param string $code Doğrulama kodu
+     * @param string $type Doğrulama türü
      * @return array Doğrulama sonucu
      * @throws ValidationException Geçersiz veri
      * @throws ZAPIException Sunucu hatası
      * 
      * @example
-     * $result = $zapi->auth->verify([
-     *     'type' => 'email',
-     *     'email' => 'user@example.com',
-     *     'code' => '123456'
-     * ]);
+     * $result = $zapi->auth->verify('user@example.com', null, '123456', 'email');
      */
-    public function verify(array $data): array
+    public function verify(?string $email, ?string $phone, string $code, string $type): array
     {
-        return $this->zapi->getHttpClient()->post('/auth/verify', $data);
+        return $this->zapi->getHttpClient()->post('/auth/verify', [
+            'email' => $email,
+            'phone' => $phone,
+            'code' => $code,
+            'type' => $type
+        ]);
     }
     
     /**
@@ -177,12 +204,6 @@ class Auth
      * $result = $zapi->auth->requestPasswordReset('user@example.com');
      * echo "Şifre sıfırlama linki gönderildi: " . $result['message'];
      */
-    public function requestPasswordReset(string $email): array
-    {
-        return $this->zapi->getHttpClient()->post('/auth/reset-password', [
-            'email' => $email
-        ]);
-    }
     
     /**
      * Şifre sıfırlama işlemini tamamlar
@@ -199,11 +220,26 @@ class Auth
      * $result = $zapi->auth->resetPassword('reset_token_123', 'new_password');
      * echo "Şifre sıfırlandı: " . $result['message'];
      */
-    public function resetPassword(string $token, string $newPassword): array
+    public function forgotPassword(?string $email = null, ?string $phone = null): array
+    {
+        $data = [];
+        
+        if ($email) {
+            $data['email'] = $email;
+        }
+        
+        if ($phone) {
+            $data['phone'] = $phone;
+        }
+        
+        return $this->zapi->getHttpClient()->post('/auth/forgot-password', $data);
+    }
+    
+    public function resetPassword(string $code, string $newPassword): array
     {
         return $this->zapi->getHttpClient()->post('/auth/reset-password', [
-            'token' => $token,
-            'password' => $newPassword
+            'code' => $code,
+            'newPassword' => $newPassword
         ]);
     }
     
@@ -222,13 +258,6 @@ class Auth
      * $result = $zapi->auth->changePassword('old_password', 'new_password');
      * echo "Şifre değiştirildi: " . $result['message'];
      */
-    public function changePassword(string $currentPassword, string $newPassword): array
-    {
-        return $this->zapi->getHttpClient()->post('/auth/change-password', [
-            'currentPassword' => $currentPassword,
-            'newPassword' => $newPassword
-        ]);
-    }
     
     /**
      * OTP (One-Time Password) gönderir
@@ -245,12 +274,42 @@ class Auth
      * $result = $zapi->auth->sendOTP('+905551234567', 'login');
      * echo "OTP gönderildi: " . $result['message'];
      */
-    public function sendOTP(string $phone, string $purpose = 'verification'): array
+    public function sendOTP(?string $mail = null, ?string $phone = null, string $phonePrefix = '90', string $firstName = '', string $lastName = '', string $name = '', string $surname = '', ?string $appId = null): array
     {
-        return $this->zapi->getHttpClient()->post('/auth/send-otp', [
-            'phone' => $phone,
-            'purpose' => $purpose
-        ]);
+        $data = [];
+        
+        if ($mail) {
+            $data['mail'] = $mail;
+        }
+        
+        if ($phone) {
+            $data['phone'] = $phone;
+            $data['phonePrefix'] = $phonePrefix;
+        }
+        
+        if ($firstName) {
+            $data['firstName'] = $firstName;
+        }
+        
+        if ($lastName) {
+            $data['lastName'] = $lastName;
+        }
+        
+        if ($name) {
+            $data['name'] = $name;
+        }
+        
+        if ($surname) {
+            $data['surname'] = $surname;
+        }
+        
+        // Orijinal API'ye uygun header ekle
+        $headers = [];
+        if ($appId) {
+            $headers['x-app-id'] = $appId;
+        }
+        
+        return $this->zapi->getHttpClient()->post('/auth/otp', $data, $headers);
     }
     
     /**
@@ -269,13 +328,23 @@ class Auth
      * $result = $zapi->auth->verifyOTP('+905551234567', '123456', 'login');
      * echo "OTP doğrulandı: " . $result['message'];
      */
-    public function verifyOTP(string $phone, string $code, string $purpose = 'verification'): array
+    public function verifyOTP(?string $phone = null, ?string $phonePrefix = null, ?string $email = null, string $otpCode): array
     {
-        return $this->zapi->getHttpClient()->post('/auth/verify-otp', [
-            'phone' => $phone,
-            'code' => $code,
-            'purpose' => $purpose
-        ]);
+        $data = ['otpCode' => $otpCode];
+        
+        if ($phone) {
+            $data['phone'] = $phone;
+        }
+        
+        if ($phonePrefix !== null) {
+            $data['phonePrefix'] = $phonePrefix;
+        }
+        
+        if ($email) {
+            $data['email'] = $email;
+        }
+        
+        return $this->zapi->getHttpClient()->post('/auth/otp-verify', $data);
     }
     
     /**
@@ -293,12 +362,16 @@ class Auth
      * $zapi->setApiKey($result['token']);
      * echo "Token yenilendi";
      */
-    public function refreshToken(string $refreshToken): array
+    public function getProfile(): array
     {
-        return $this->zapi->getHttpClient()->post('/auth/refresh', [
-            'refreshToken' => $refreshToken
-        ]);
+        return $this->zapi->getHttpClient()->get('/auth/profile');
     }
+    
+    public function updateProfile(array $data): array
+    {
+        return $this->zapi->getHttpClient()->put('/auth/profile', $data);
+    }
+    
     
     /**
      * Kullanıcı çıkışı yapar
@@ -318,18 +391,49 @@ class Auth
     }
     
     /**
-     * Auth sağlık kontrolü yapar
+     * JWT token doğrulama işlemi yapar
      * 
-     * Bu metod auth servisinin sağlık durumunu kontrol eder.
+     * Bu metod JWT token'ı doğrular ve detaylarını döndürür.
      * 
-     * @return array Sağlık durumu
-     * @throws ZAPIException Sunucu hatası
+     * @param string $token Doğrulanacak JWT token
+     * @return array API yanıtı
      * 
      * @example
-     * $health = $zapi->auth->healthCheck();
-     * echo "Auth servisi durumu: " . $health['status'];
+     * $result = $zapi->auth->verifyToken('jwt_token_here');
+     * echo "Token geçerli mi: " . ($result['data']['validation']['isValid'] ? 'Evet' : 'Hayır');
      */
-    public function healthCheck(): array
+    public function verifyToken(string $token): array
+    {
+        return $this->zapi->getHttpClient()->post('/auth/verify-token', [
+            'token' => $token
+        ]);
+    }
+    
+    /**
+     * Şifre değiştirme işlemi yapar
+     */
+    public function changePassword(string $currentPassword, string $newPassword): array
+    {
+        return $this->zapi->getHttpClient()->post('/auth/change-password', [
+            'currentPassword' => $currentPassword,
+            'newPassword' => $newPassword
+        ]);
+    }
+    
+    /**
+     * Token yenileme işlemi yapar
+     */
+    public function refresh(string $refreshToken): array
+    {
+        return $this->zapi->getHttpClient()->post('/auth/refresh', [
+            'refreshToken' => $refreshToken
+        ]);
+    }
+    
+    /**
+     * Auth servisi sağlık kontrolü
+     */
+    public function health(): array
     {
         return $this->zapi->getHttpClient()->get('/auth/health');
     }

@@ -228,12 +228,4 @@ class APIKeys
      * $result = $zapi->apiKeys->toggleStatus('507f1f77bcf86cd799439011');
      * echo "API anahtarı durumu değiştirildi: " . $result['message'];
      */
-    public function toggleStatus(string $keyId): array
-    {
-        if (empty($keyId)) {
-            throw new ValidationException('API anahtarı ID\'si boş olamaz');
-        }
-        
-        return $this->zapi->getHttpClient()->patch("/api-keys/{$keyId}/toggle-status");
-    }
 }
